@@ -2,7 +2,8 @@ package tn.esprit.pidev.dto;
 
 public class LoginRequest {
 
-    private String username;
+    private String username;  // Can be username or email
+    private String email;     // Optional email field
     private String password;
 
     public String getUsername() {
@@ -11,6 +12,14 @@ public class LoginRequest {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {

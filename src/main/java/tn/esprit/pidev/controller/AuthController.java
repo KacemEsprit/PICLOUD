@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
     @Autowired
@@ -32,7 +33,12 @@ public class AuthController {
         Authentication authentication = authService.authenticateUser(request);
         String token = jwtUtil.generateJwtToken(authentication);
 
-        User user = (User) authentication.getPrincipal();
+        // Get the actual User entity from the database using email or username
+        String identifier = (request.getEmail() != null && !request.getEmail().isEmpty()) 
+            ? request.getEmail() 
+            : request.getUsername();
+        User user = authService.getUserByUsername(identifier);
+        
         return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getUsername(),
                 user.getEmail(), user.getName(), user.getRole()));
     }

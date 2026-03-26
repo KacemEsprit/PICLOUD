@@ -46,10 +46,21 @@ public class AuthService {
     }
 
     public Authentication authenticateUser(LoginRequest loginRequest) {
+        // Use email if provided, otherwise use username
+        String identifier = (loginRequest.getEmail() != null && !loginRequest.getEmail().isEmpty()) 
+            ? loginRequest.getEmail() 
+            : loginRequest.getUsername();
+        
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(identifier, loginRequest.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return authentication;
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
     }
 }
