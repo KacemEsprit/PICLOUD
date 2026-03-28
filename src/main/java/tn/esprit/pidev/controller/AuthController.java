@@ -25,7 +25,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         User user = authService.registerUser(request);
-        return ResponseEntity.ok("User registered successfully with username: " + user.getUsername());
+        return ResponseEntity.ok(new AuthResponse(null, user.getId(), user.getUsername(),
+                user.getEmail(), user.getName(), user.getRole().toString()));
     }
 
     @PostMapping("/login")
@@ -40,6 +41,6 @@ public class AuthController {
         User user = authService.getUserByUsername(identifier);
         
         return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getUsername(),
-                user.getEmail(), user.getName(), user.getRole()));
+                user.getEmail(), user.getName(), user.getRole().toString()));
     }
 }

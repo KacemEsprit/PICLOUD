@@ -1,5 +1,6 @@
 package tn.esprit.pidev.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import tn.esprit.pidev.entity.RoleEnum;
 
 public class RegisterRequest {
@@ -9,6 +10,7 @@ public class RegisterRequest {
     private String email;
     private String name;
     private RoleEnum role;
+    @JsonProperty("CIN")
     private Long CIN;
     private String photo;
 

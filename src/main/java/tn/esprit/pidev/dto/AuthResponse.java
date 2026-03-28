@@ -1,7 +1,5 @@
 package tn.esprit.pidev.dto;
 
-import tn.esprit.pidev.entity.RoleEnum;
-
 public class AuthResponse {
 
     private String token;
@@ -10,9 +8,9 @@ public class AuthResponse {
     private String username;
     private String email;
     private String name;
-    private RoleEnum role;
+    private String role;
 
-    public AuthResponse(String token, Long id, String username, String email, String name, RoleEnum role) {
+    public AuthResponse(String token, Long id, String username, String email, String name, String role) {
         this.token = token;
         this.id = id;
         this.username = username;
@@ -69,11 +67,11 @@ public class AuthResponse {
         this.name = name;
     }
 
-    public RoleEnum getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(RoleEnum role) {
+    public void setRole(String role) {
         this.role = role;
     }
 }

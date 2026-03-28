@@ -22,20 +22,28 @@ public class User {
     @Column(nullable = false)
     private String name;          // renamed from fullName to match spec
 
-    private String photo;         // new field
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleEnum role;        // new field, must be non-null
 
     @Column(unique = true)
-    private Long CIN;             // new field, often unique
+    private Long cin;             // new field, often unique
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_enabled", nullable = false)
+    private boolean isEnabled = true;
+
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] photo;
+
+    @Column(name = "photo_content_type")
+    private String photoContentType;
 
     // Constructors
     public User() {
@@ -93,12 +101,21 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public String getPhoto() {
+    public byte[] getPhoto() {
         return photo;
     }
 
-    public void setPhoto(String photo) {
+    public void setPhoto(byte[] photo) {
         this.photo = photo;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getPhotoContentType() {
+        return photoContentType;
+    }
+
+    public void setPhotoContentType(String photoContentType) {
+        this.photoContentType = photoContentType;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -111,12 +128,12 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Long getCIN() {
-        return CIN;
+    public Long getCin() {
+        return cin;
     }
 
-    public void setCIN(Long CIN) {
-        this.CIN = CIN;
+    public void setCin(Long cin) {
+        this.cin = cin;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -126,6 +143,15 @@ public class User {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+        this.updatedAt = LocalDateTime.now();
     }
 
     // Optional: override toString, equals, hashCode
@@ -156,4 +182,3 @@ public class User {
     }
 
 }
-
