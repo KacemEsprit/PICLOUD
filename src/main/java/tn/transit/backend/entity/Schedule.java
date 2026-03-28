@@ -1,5 +1,7 @@
 package tn.transit.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.transit.backend.entity.enums.DayType;
@@ -19,6 +21,7 @@ public class Schedule {
 
     @ManyToOne
     @JoinColumn(name = "line_id", nullable = false)
+    @JsonBackReference("line-schedules")
     private Line line;
 
     @ManyToOne
@@ -35,5 +38,6 @@ public class Schedule {
     @OneToMany(mappedBy = "schedule",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
+    @JsonManagedReference("schedule-trips")
     private List<Trip> trips;
 }

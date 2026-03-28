@@ -1,5 +1,6 @@
 package tn.transit.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.transit.backend.entity.enums.LineStatus;
@@ -7,7 +8,7 @@ import tn.transit.backend.entity.enums.TransportMode;
 import java.util.List;
 
 @Entity
-@Table(name = "lines")
+@Table(name = "transit_lines")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,10 +30,13 @@ public class Line {
     @OneToMany(mappedBy = "line",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
+    @JsonManagedReference("line-stops")
+
     private List<Stop> stops;
 
     @OneToMany(mappedBy = "line",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
+    @JsonManagedReference("line-schedules")
     private List<Schedule> schedules;
 }

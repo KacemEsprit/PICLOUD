@@ -1,5 +1,6 @@
 package tn.transit.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,5 +22,6 @@ public class Stop {
 
     @ManyToOne
     @JoinColumn(name = "line_id", nullable = false)
+    @JsonBackReference("line-stops")
     private Line line;
 }
