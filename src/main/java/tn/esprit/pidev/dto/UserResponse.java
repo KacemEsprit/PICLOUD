@@ -6,16 +6,20 @@ public class UserResponse {
     private Long id;
     private String username;
     private String email;
+    private String name;
+    private Long cin;
     private String role;
     private String photoContentType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean enabled;
 
-    public UserResponse(Long id, String username, String email, String role, String photoContentType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean enabled) {
+    public UserResponse(Long id, String username, String email, String name, Long cin, String role, String photoContentType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean enabled) {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.name = name;
+        this.cin = cin;
         this.role = role;
         this.photoContentType = photoContentType;
         this.createdAt = createdAt;
@@ -46,6 +50,22 @@ public class UserResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Long getCin() {
+        return cin;
+    }
+
+    public void setCin(Long cin) {
+        this.cin = cin;
     }
 
     public String getRole() {

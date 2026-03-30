@@ -6,6 +6,7 @@ import tn.esprit.pidev.dto.UserCreateRequest;
 import tn.esprit.pidev.dto.UserSearchCriteria;
 import tn.esprit.pidev.entity.RoleEnum;
 import tn.esprit.pidev.entity.User;
+import tn.esprit.pidev.exception.InvalidFileException;
 import tn.esprit.pidev.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @RestController
@@ -118,6 +120,20 @@ public class AdminUserController {
     }
 
     /**
+     * PATCH /api/admin/users/{id}/status - Change user status (enabled/disabled)
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<UserResponse> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, Boolean> request) {
+        logger.info("PATCH /api/admin/users/" + id + "/status");
+        Boolean enabled = request.get("enabled");
+        if (enabled == null) {
+            throw new InvalidFileException("Enabled field is required");
+        }
+        UserResponse updatedUser = userService.updateUserStatus(id, enabled);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
      * POST /api/admin/users/{id}/photo - Upload user photo
      */
     @PostMapping("/{id}/photo")
@@ -165,6 +181,8 @@ public class AdminUserController {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getName(),
+                user.getCin(),
                 user.getRole().toString(),
                 user.getPhotoContentType(),
                 user.getCreatedAt(),

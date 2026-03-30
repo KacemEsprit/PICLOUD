@@ -21,6 +21,7 @@ public interface UserService {
     // UPDATE Operations
     UserResponse updateUser(Long id, UserUpdateRequest request);
     UserResponse changeUserRole(Long id, RoleEnum role);
+    UserResponse updateUserStatus(Long id, boolean enabled);
 
     // DELETE Operations
     void deleteUser(Long id);  // Soft delete

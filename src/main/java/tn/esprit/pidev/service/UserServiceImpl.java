@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -76,6 +77,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(UserCreateRequest request) {
         logger.info("Creating new user: " + request.getUsername());
+        
+        // DEBUG: Log all received fields
+        logger.info("=== USER CREATE REQUEST DEBUG ===");
+        logger.info("Username: " + request.getUsername());
+        logger.info("Email: " + request.getEmail());
+        logger.info("Name: " + request.getName());
+        logger.info("Role: " + request.getRole());
+        logger.info("Password: " + (request.getPassword() != null ? "***" : "null"));
+        logger.info("=================================");
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new InvalidFileException("Username already exists: " + request.getUsername());
@@ -84,10 +94,16 @@ public class UserServiceImpl implements UserService {
             throw new InvalidFileException("Email already exists: " + request.getEmail());
         }
 
+        // Validate that name is not null or empty
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new InvalidFileException("Name is required and cannot be empty");
+        }
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
+        user.setName(request.getName());
         user.setRole(request.getRole());
         user.setEnabled(true);
 
@@ -110,9 +126,25 @@ public class UserServiceImpl implements UserService {
             throw new InvalidFileException("Email already exists");
         }
 
+        // Validate that name is not null or empty
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new InvalidFileException("Name is required and cannot be empty");
+        }
+
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
+        user.setName(request.getName());
         user.setRole(request.getRole());
+        
+        // Update cin if provided
+        if (request.getCin() != null) {
+            user.setCin(request.getCin());
+        }
+        
+        // Update enabled if provided
+        if (request.getEnabled() != null) {
+            user.setEnabled(request.getEnabled());
+        }
 
         User savedUser = userRepository.save(user);
         logger.info("User updated successfully: " + id);
@@ -120,13 +152,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
-        logger.info("Soft deleting user with id: " + id);
+        logger.info("Hard deleting user with id: " + id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
-        user.setEnabled(false);
-        userRepository.save(user);
-        logger.info("User soft deleted: " + id);
+        userRepository.deleteById(id);
+        logger.info("User hard deleted: " + id);
     }
 
     @Override
@@ -136,6 +168,17 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setRole(role);
         User savedUser = userRepository.save(user);
+        return convertToResponse(savedUser);
+    }
+
+    @Override
+    public UserResponse updateUserStatus(Long id, boolean enabled) {
+        logger.info("Updating status for user id: " + id + " to " + enabled);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        user.setEnabled(enabled);
+        User savedUser = userRepository.save(user);
+        logger.info("User status updated successfully: " + id);
         return convertToResponse(savedUser);
     }
 
@@ -212,6 +255,8 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getName(),
+                user.getCin(),
                 user.getRole().toString(),
                 user.getPhotoContentType(),
                 user.getCreatedAt(),
