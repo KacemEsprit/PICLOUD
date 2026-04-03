@@ -38,6 +38,12 @@ public class User {
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled = true;
 
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expiry")
+    private LocalDateTime passwordResetTokenExpiry;
+
     @Lob
     @Column(columnDefinition = "LONGBLOB")
     private byte[] photo;
@@ -151,6 +157,24 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         isEnabled = enabled;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getPasswordResetToken() {
+        return passwordResetToken;
+    }
+
+    public void setPasswordResetToken(String passwordResetToken) {
+        this.passwordResetToken = passwordResetToken;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getPasswordResetTokenExpiry() {
+        return passwordResetTokenExpiry;
+    }
+
+    public void setPasswordResetTokenExpiry(LocalDateTime passwordResetTokenExpiry) {
+        this.passwordResetTokenExpiry = passwordResetTokenExpiry;
         this.updatedAt = LocalDateTime.now();
     }
 
