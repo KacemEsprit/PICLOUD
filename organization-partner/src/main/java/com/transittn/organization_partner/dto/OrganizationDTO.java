@@ -12,7 +12,8 @@ public class OrganizationDTO {
     private Long id;
 
     @NotBlank(message = "Le nom est obligatoire")
-    @Size(min = 2, max = 100, message = "Le nom doit avoir entre 2 et 100 caractères")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+
     private String name;
 
     @NotBlank(message = "L'acronyme est obligatoire")
@@ -25,8 +26,8 @@ public class OrganizationDTO {
     @Email(message = "Email invalide")
     private String email;
 
-    @NotBlank(message = "Le téléphone est obligatoire")
-    @Pattern(regexp = "^\\+216[0-9]{8}$", message = "Numéro tunisien invalide ex: +21671000000")
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^\\+216[0-9]{8}$", message = "Invalid Tunisian number ex: +21671000000")
     private String phoneNumber;
 
     private String website;
