@@ -18,6 +18,9 @@ public class OrganizationDTO {
     @NotBlank(message = "L'acronyme est obligatoire")
     private String acronyme;
 
+    @NotBlank(message = "Le type de transport est obligatoire")
+    private String transportType;
+
     @NotBlank(message = "L'email est obligatoire")
     @Email(message = "Email invalide")
     private String email;

@@ -37,4 +37,9 @@ public class PartnerContract {
     @ManyToOne
     @JoinColumn(name = "partner_id")
     private Partner partner;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

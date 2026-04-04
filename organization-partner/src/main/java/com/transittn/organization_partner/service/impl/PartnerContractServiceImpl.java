@@ -45,7 +45,6 @@ public class PartnerContractServiceImpl implements PartnerContractService {
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .description(dto.getDescription())
-                .createdAt(LocalDateTime.now())
                 .organization(org)
                 .partner(partner)
                 .build();
