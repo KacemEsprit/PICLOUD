@@ -1,6 +1,7 @@
 package com.transittn.organization_partner.dto;
 
 import com.transittn.organization_partner.enums.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Data
@@ -9,9 +10,18 @@ import lombok.*;
 @Builder
 public class OperatorZoneDTO {
     private Long id;
+
+    @NotBlank(message = "Le gouvernorat est obligatoire")
     private String governorate;
+
+    @NotNull(message = "La région est obligatoire")
     private Region region;
+
     private Boolean isHeadquarter;
+
+    @NotNull(message = "Le type de couverture est obligatoire")
     private CoverageType coverageType;
+
+    @NotNull(message = "L'organisation est obligatoire")
     private Long organizationId;
 }

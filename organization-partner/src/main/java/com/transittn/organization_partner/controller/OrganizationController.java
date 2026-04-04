@@ -4,12 +4,11 @@ import com.transittn.organization_partner.dto.OrganizationDTO;
 import com.transittn.organization_partner.enums.CoverageType;
 import com.transittn.organization_partner.enums.OrgStatus;
 import com.transittn.organization_partner.service.OrganizationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import jakarta.validation.Valid;
-
 
 @RestController
 @RequestMapping("/api/organizations")
@@ -20,13 +19,13 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @PostMapping
-    public ResponseEntity<OrganizationDTO> create(@RequestBody OrganizationDTO dto) {
+    public ResponseEntity<OrganizationDTO> create(@Valid @RequestBody OrganizationDTO dto) {
         return ResponseEntity.ok(organizationService.create(dto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<OrganizationDTO> update(@PathVariable Long id,
-                                                  @RequestBody OrganizationDTO dto) {
+                                                  @Valid @RequestBody OrganizationDTO dto) {
         return ResponseEntity.ok(organizationService.update(id, dto));
     }
 

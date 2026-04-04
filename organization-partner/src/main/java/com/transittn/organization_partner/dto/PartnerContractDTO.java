@@ -12,20 +12,24 @@ import java.util.Date;
 public class PartnerContractDTO {
     private Long id;
 
-    @NotNull(message = "Contract type is required")
+    @NotNull(message = "Le type de contrat est obligatoire")
     private ContractType contractType;
 
+    @NotNull(message = "Le statut est obligatoire")
     private ContractStatus status;
 
-    @NotNull(message = "Start date is required")
+    @NotNull(message = "La date de début est obligatoire")
     private Date startDate;
 
+    @NotNull(message = "La date de fin est obligatoire")
     private Date endDate;
+
+    @Size(max = 500, message = "La description ne doit pas dépasser 500 caractères")
     private String description;
 
-    @NotNull(message = "Organization is required")
+    @NotNull(message = "L'organisation est obligatoire")
     private Long organizationId;
 
-    @NotNull(message = "Partner is required")
+    @NotNull(message = "Le partenaire est obligatoire")
     private Long partnerId;
 }

@@ -3,6 +3,7 @@ package com.transittn.organization_partner.controller;
 import com.transittn.organization_partner.dto.PartnerContractDTO;
 import com.transittn.organization_partner.enums.ContractStatus;
 import com.transittn.organization_partner.service.PartnerContractService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +18,13 @@ public class PartnerContractController {
     private final PartnerContractService contractService;
 
     @PostMapping
-    public ResponseEntity<PartnerContractDTO> create(@RequestBody PartnerContractDTO dto) {
+    public ResponseEntity<PartnerContractDTO> create(@Valid @RequestBody PartnerContractDTO dto) {
         return ResponseEntity.ok(contractService.create(dto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PartnerContractDTO> update(@PathVariable Long id,
-                                                     @RequestBody PartnerContractDTO dto) {
+                                                     @Valid @RequestBody PartnerContractDTO dto) {
         return ResponseEntity.ok(contractService.update(id, dto));
     }
 
