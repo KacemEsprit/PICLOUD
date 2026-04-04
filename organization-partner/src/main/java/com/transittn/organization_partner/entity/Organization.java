@@ -19,6 +19,7 @@ public class Organization {
 
     private String name;
     private String acronyme;
+    private String transportType;
     private String email;
     private String phoneNumber;
     private String website;
