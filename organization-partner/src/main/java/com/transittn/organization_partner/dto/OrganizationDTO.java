@@ -11,34 +11,31 @@ import lombok.*;
 public class OrganizationDTO {
     private Long id;
 
-    @NotBlank(message = "Le nom est obligatoire")
+    @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
-
     private String name;
 
-    @NotBlank(message = "L'acronyme est obligatoire")
+    @NotBlank(message = "Acronyme is required")
     private String acronyme;
 
-    @NotBlank(message = "Le type de transport est obligatoire")
     private String transportType;
 
-    @NotBlank(message = "L'email est obligatoire")
-    @Email(message = "Email invalide")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email")
     private String email;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\+216[0-9]{8}$", message = "Invalid Tunisian number ex: +21671000000")
     private String phoneNumber;
 
     private String website;
     private String logo;
 
-    @NotNull(message = "Le type est obligatoire")
+    @NotNull(message = "Type is required")
     private OrgType type;
 
-    @NotNull(message = "Le statut est obligatoire")
+    @NotNull(message = "Status is required")
     private OrgStatus status;
 
-    @NotNull(message = "Le type de couverture est obligatoire")
+    @NotNull(message = "Coverage type is required")
     private CoverageType coverageType;
 }

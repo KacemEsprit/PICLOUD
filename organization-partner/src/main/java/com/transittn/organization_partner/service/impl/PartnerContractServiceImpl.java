@@ -29,8 +29,10 @@ public class PartnerContractServiceImpl implements PartnerContractService {
                 .startDate(contract.getStartDate())
                 .endDate(contract.getEndDate())
                 .description(contract.getDescription())
-                .organizationId(contract.getOrganization().getId())
-                .partnerId(contract.getPartner().getId())
+                .organizationId(contract.getOrganization() != null ?
+                        contract.getOrganization().getId() : null)
+                .partnerId(contract.getPartner() != null ?
+                        contract.getPartner().getId() : null)
                 .build();
     }
 

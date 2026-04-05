@@ -2,11 +2,16 @@ package com.transittn.organization_partner.service.impl;
 
 import com.transittn.organization_partner.dto.PartnerDTO;
 import com.transittn.organization_partner.entity.Partner;
+import com.transittn.organization_partner.entity.PartnerContract;
+import com.transittn.organization_partner.enums.ContractStatus;
+import com.transittn.organization_partner.enums.ContractType;
 import com.transittn.organization_partner.enums.PartnerStatus;
+import com.transittn.organization_partner.repository.PartnerContractRepository;
 import com.transittn.organization_partner.repository.PartnerRepository;
 import com.transittn.organization_partner.service.PartnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +20,7 @@ import java.util.stream.Collectors;
 public class PartnerServiceImpl implements PartnerService {
 
     private final PartnerRepository partnerRepository;
+    private final PartnerContractRepository contractRepository;
 
     private PartnerDTO toDTO(Partner partner) {
         return PartnerDTO.builder()
@@ -46,7 +52,20 @@ public class PartnerServiceImpl implements PartnerService {
 
     @Override
     public PartnerDTO create(PartnerDTO dto) {
-        return toDTO(partnerRepository.save(toEntity(dto)));
+        Partner saved = partnerRepository.save(toEntity(dto));
+
+        // Créer contrat automatique
+        PartnerContract contract = PartnerContract.builder()
+                .contractType(ContractType.COMMERCIAL)
+                .status(ContractStatus.DRAFT)
+                .startDate(new Date())
+                .endDate(new Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000))
+                .description("Auto-generated contract for partner: " + saved.getName())
+                .partner(saved)
+                .build();
+        contractRepository.save(contract);
+
+        return toDTO(saved);
     }
 
     @Override
