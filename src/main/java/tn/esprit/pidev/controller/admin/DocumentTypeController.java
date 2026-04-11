@@ -16,6 +16,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * REST Controller for Document Type Management (ADMIN operations)
@@ -36,8 +41,8 @@ public class DocumentTypeController {
      */
     @GetMapping
     public ResponseEntity<Page<DocumentTypeResponse>> getAllDocumentTypes(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size) {
 
         logger.info("GET /api/admin/document-types - Fetching all document types, page: {}, size: {}", page, size);
 
@@ -52,11 +57,11 @@ public class DocumentTypeController {
      */
     @GetMapping("/search")
     public ResponseEntity<Page<DocumentTypeResponse>> searchDocumentTypes(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam @NotBlank(message = "Search keyword is required") String keyword,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size) {
 
-        logger.info("GET /api/admin/document-types/search - Searching with keyword: {}", keyword);
+        logger.info("GET /api/admin/document-types/search - Searching with keyword: {}, page: {}, size: {}", keyword, page, size);
 
         Page<DocumentType> documentTypes = documentTypeService.searchDocumentTypes(keyword, page, size);
         Page<DocumentTypeResponse> responseData = documentTypes.map(documentTypeService::toDto);
@@ -68,7 +73,7 @@ public class DocumentTypeController {
      * GET /api/admin/document-types/{id} - Get document type by ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DocumentTypeResponse> getDocumentTypeById(@PathVariable Long id) {
+    public ResponseEntity<DocumentTypeResponse> getDocumentTypeById(@PathVariable @NotNull(message = "Document type ID is required") @Positive(message = "Document type ID must be positive") Long id) {
         logger.info("GET /api/admin/document-types/{} - Fetching document type", id);
 
         DocumentType documentType = documentTypeService.getDocumentTypeById(id);
@@ -97,7 +102,7 @@ public class DocumentTypeController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<DocumentTypeResponse> updateDocumentType(
-            @PathVariable Long id,
+            @PathVariable @NotNull(message = "Document type ID is required") @Positive(message = "Document type ID must be positive") Long id,
             @Valid @RequestBody DocumentTypeCreateRequest request) {
 
         logger.info("PUT /api/admin/document-types/{} - Updating document type", id);
@@ -112,7 +117,7 @@ public class DocumentTypeController {
      * DELETE /api/admin/document-types/{id} - Delete document type (hard delete)
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocumentType(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocumentType(@PathVariable @NotNull(message = "Document type ID is required") @Positive(message = "Document type ID must be positive") Long id) {
         logger.info("DELETE /api/admin/document-types/{} - Deleting document type", id);
 
         documentTypeService.deleteDocumentType(id);

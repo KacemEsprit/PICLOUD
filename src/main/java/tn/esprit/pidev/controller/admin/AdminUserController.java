@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -39,8 +43,8 @@ public class AdminUserController {
     public ResponseEntity<Page<UserResponse>> getAllUsers(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) RoleEnum role,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
 
@@ -57,8 +61,8 @@ public class AdminUserController {
     public ResponseEntity<Page<UserResponse>> searchUsers(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) RoleEnum role,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
 
@@ -72,7 +76,7 @@ public class AdminUserController {
      * GET /api/admin/users/{id} - Get user by ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id) {
         logger.info("GET /api/admin/users/" + id);
         UserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(user);
@@ -92,7 +96,7 @@ public class AdminUserController {
      * PUT /api/admin/users/{id} - Update user information (without photo)
      */
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, 
+    public ResponseEntity<UserResponse> updateUser(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id, 
                                                     @Valid @RequestBody UserUpdateRequest request) {
         logger.info("PUT /api/admin/users/" + id);
         UserResponse updatedUser = userService.updateUser(id, request);
@@ -103,7 +107,7 @@ public class AdminUserController {
      * DELETE /api/admin/users/{id} - Soft delete user
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id) {
         logger.info("DELETE /api/admin/users/" + id);
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
@@ -113,7 +117,8 @@ public class AdminUserController {
      * PATCH /api/admin/users/{id}/role - Change user role
      */
     @PatchMapping("/{id}/role")
-    public ResponseEntity<UserResponse> changeUserRole(@PathVariable Long id, @RequestParam RoleEnum role) {
+    public ResponseEntity<UserResponse> changeUserRole(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id, 
+                                                      @RequestParam @NotNull(message = "Role is required") RoleEnum role) {
         logger.info("PATCH /api/admin/users/" + id + "/role");
         UserResponse updatedUser = userService.changeUserRole(id, role);
         return ResponseEntity.ok(updatedUser);
@@ -137,8 +142,8 @@ public class AdminUserController {
      * POST /api/admin/users/{id}/photo - Upload user photo
      */
     @PostMapping("/{id}/photo")
-    public ResponseEntity<UserResponse> uploadUserPhoto(@PathVariable Long id, 
-                                                        @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<UserResponse> uploadUserPhoto(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id, 
+                                                        @RequestParam("file") @NotNull(message = "File is required") MultipartFile file) {
         logger.info("POST /api/admin/users/" + id + "/photo");
         UserResponse response = userService.uploadUserPhoto(id, file);
         return ResponseEntity.ok(response);
@@ -148,7 +153,7 @@ public class AdminUserController {
      * GET /api/admin/users/{id}/photo - Download user photo
      */
     @GetMapping("/{id}/photo")
-    public ResponseEntity<byte[]> getUserPhoto(@PathVariable Long id) {
+    public ResponseEntity<byte[]> getUserPhoto(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id) {
         logger.info("GET /api/admin/users/" + id + "/photo");
         UserResponse userResponse = userService.getUserById(id);
         byte[] photoData = userService.getUserPhoto(id);
@@ -163,7 +168,7 @@ public class AdminUserController {
      * DELETE /api/admin/users/{id}/photo - Delete user photo
      */
     @DeleteMapping("/{id}/photo")
-    public ResponseEntity<UserResponse> deleteUserPhoto(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> deleteUserPhoto(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id) {
         logger.info("DELETE /api/admin/users/" + id + "/photo");
         UserResponse response = userService.deleteUserPhoto(id);
         return ResponseEntity.ok(response);

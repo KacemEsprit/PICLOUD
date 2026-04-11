@@ -211,6 +211,44 @@ public class LegalDocumentService {
     }
 
     /**
+     * Toggle document status between REJECTED and VALID (ADMIN operation)
+     * Allows admin to change a rejected document to approved and vice versa
+     * @param documentId ID of the document to toggle
+     * @param adminUserId ID of the admin performing the action
+     * @return Updated LegalDocument with new status
+     * @throws DocumentNotFoundException if document not found
+     * @throws InvalidDocumentException if document status is not REJECTED or VALID
+     */
+    @Transactional
+    public LegalDocument toggleDocumentStatus(Long documentId, Long adminUserId) {
+        logger.info("Admin {} toggling status for document {}", adminUserId, documentId);
+
+        LegalDocument document = legalDocumentRepository.findById(documentId)
+            .orElseThrow(() -> new DocumentNotFoundException(documentId));
+
+        DocumentStatusEnum currentStatus = document.getStatus();
+
+        // Only allow toggling between VALID and REJECTED
+        if (currentStatus == DocumentStatusEnum.VALID) {
+            document.setStatus(DocumentStatusEnum.REJECTED);
+            logger.info("✓ Document {} status changed from VALID to REJECTED by admin {}", documentId, adminUserId);
+        } else if (currentStatus == DocumentStatusEnum.REJECTED) {
+            document.setStatus(DocumentStatusEnum.VALID);
+            logger.info("✓ Document {} status changed from REJECTED to VALID by admin {}", documentId, adminUserId);
+        } else {
+            throw new InvalidDocumentException(
+                "Cannot toggle status for document with status: " + currentStatus + 
+                ". Only VALID and REJECTED documents can be toggled."
+            );
+        }
+
+        LegalDocument saved = legalDocumentRepository.save(document);
+        logger.info("✓ Document status toggled: ID {} - New Status: {}", documentId, saved.getStatus());
+
+        return saved;
+    }
+
+    /**
      * Delete document (hard delete)
      */
     @Transactional

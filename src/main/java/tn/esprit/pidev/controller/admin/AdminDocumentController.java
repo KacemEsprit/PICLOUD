@@ -17,6 +17,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 /**
  * REST Controller for Document Management (ADMIN operations)
@@ -37,16 +41,16 @@ public class AdminDocumentController {
      */
     @GetMapping
     public ResponseEntity<Page<LegalDocumentResponse>> searchDocuments(
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) Long documentTypeId,
+            @RequestParam(required = false) @Positive(message = "User ID must be positive") Long userId,
+            @RequestParam(required = false) @Positive(message = "Document type ID must be positive") Long documentTypeId,
             @RequestParam(required = false) DocumentStatusEnum status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size,
             @RequestParam(defaultValue = "uploadDate") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
 
-        logger.info("GET /api/admin/documents - Searching with filters: userId={}, documentTypeId={}, status={}", 
-                   userId, documentTypeId, status);
+        logger.info("GET /api/admin/documents - Searching with filters: userId={}, documentTypeId={}, status={}, page: {}, size: {}", 
+                   userId, documentTypeId, status, page, size);
 
         DocumentSearchCriteria criteria = new DocumentSearchCriteria(userId, documentTypeId, status, page, size, sortBy, sortDir);
         Page<LegalDocument> documents = legalDocumentService.searchDocuments(criteria);
@@ -60,10 +64,10 @@ public class AdminDocumentController {
      */
     @GetMapping("/pending")
     public ResponseEntity<Page<LegalDocumentResponse>> getPendingDocuments(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size) {
 
-        logger.info("GET /api/admin/documents/pending - Fetching pending documents for review");
+        logger.info("GET /api/admin/documents/pending - Fetching pending documents for review, page: {}, size: {}", page, size);
 
         Page<LegalDocument> documents = legalDocumentService.getPendingDocuments(page, size);
         Page<LegalDocumentResponse> responseData = documents.map(legalDocumentService::toDto);
@@ -75,7 +79,7 @@ public class AdminDocumentController {
      * GET /api/admin/documents/{id} - Get document details
      */
     @GetMapping("/{id}")
-    public ResponseEntity<LegalDocumentResponse> getDocument(@PathVariable Long id) {
+    public ResponseEntity<LegalDocumentResponse> getDocument(@PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
         logger.info("GET /api/admin/documents/{} - Fetching document details", id);
 
         LegalDocument document = legalDocumentService.getDocumentByIdAdmin(id);
@@ -89,11 +93,11 @@ public class AdminDocumentController {
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<LegalDocumentResponse>> getUserDocuments(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long userId,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size) {
 
-        logger.info("GET /api/admin/documents/user/{} - Fetching all documents for user {}", userId, userId);
+        logger.info("GET /api/admin/documents/user/{} - Fetching all documents for user {}, page: {}, size: {}", userId, userId, page, size);
 
         Page<LegalDocument> documents = legalDocumentService.getUserDocuments(userId, page, size);
         Page<LegalDocumentResponse> responseData = documents.map(legalDocumentService::toDto);
@@ -105,7 +109,7 @@ public class AdminDocumentController {
      * POST /api/admin/documents/{id}/approve - Approve document
      */
     @PostMapping("/{id}/approve")
-    public ResponseEntity<LegalDocumentResponse> approveDocument(@PathVariable Long id) {
+    public ResponseEntity<LegalDocumentResponse> approveDocument(@PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
         Long adminUserId = getCurrentUserId();
         logger.info("POST /api/admin/documents/{}/approve - Admin {} approving document", id, adminUserId);
 
@@ -120,7 +124,7 @@ public class AdminDocumentController {
      */
     @PostMapping("/{id}/reject")
     public ResponseEntity<LegalDocumentResponse> rejectDocument(
-            @PathVariable Long id,
+            @PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id,
             @Valid @RequestBody DocumentApprovalRequest request) {
 
         Long adminUserId = getCurrentUserId();
@@ -137,7 +141,7 @@ public class AdminDocumentController {
      */
     @PostMapping("/{id}/request-update")
     public ResponseEntity<LegalDocumentResponse> requestDocumentUpdate(
-            @PathVariable Long id,
+            @PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id,
             @Valid @RequestBody DocumentApprovalRequest request) {
 
         Long adminUserId = getCurrentUserId();
@@ -150,10 +154,27 @@ public class AdminDocumentController {
     }
 
     /**
+     * POST /api/admin/documents/{id}/toggle-status - Toggle document status between REJECTED and VALID
+     * Allows admin to quickly switch a document from approved to rejected and vice versa
+     */
+    @PostMapping("/{id}/toggle-status")
+    public ResponseEntity<LegalDocumentResponse> toggleDocumentStatus(
+            @PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
+
+        Long adminUserId = getCurrentUserId();
+        logger.info("POST /api/admin/documents/{}/toggle-status - Admin {} toggling document status", id, adminUserId);
+
+        LegalDocument document = legalDocumentService.toggleDocumentStatus(id, adminUserId);
+        LegalDocumentResponse response = legalDocumentService.toDto(document);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * DELETE /api/admin/documents/{id} - Delete document (hard delete)
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
         logger.info("DELETE /api/admin/documents/{} - Admin deleting document", id);
 
         legalDocumentService.deleteDocumentAdmin(id);
@@ -192,4 +213,3 @@ public class AdminDocumentController {
         return 1L;
     }
 }
-

@@ -18,6 +18,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,11 +49,11 @@ public class LegalDocumentController {
      */
     @GetMapping
     public ResponseEntity<Page<LegalDocumentResponse>> getUserDocuments(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number cannot be less than 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Page size must be at least 1") @Max(value = 100, message = "Page size cannot exceed 100") int size) {
 
         Long userId = getCurrentUserId();
-        logger.info("GET /api/documents - User {} fetching their documents, page: {}", userId, page);
+        logger.info("GET /api/documents - User {} fetching their documents, page: {}, size: {}", userId, page, size);
 
         Page<LegalDocument> documents = legalDocumentService.getUserDocuments(userId, page, size);
         Page<LegalDocumentResponse> responseData = documents.map(legalDocumentService::toDto);
@@ -60,7 +65,7 @@ public class LegalDocumentController {
      * GET /api/documents/{id} - Get specific document (own only)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<LegalDocumentResponse> getDocument(@PathVariable Long id) {
+    public ResponseEntity<LegalDocumentResponse> getDocument(@PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
         Long userId = getCurrentUserId();
         logger.info("GET /api/documents/{} - User {} fetching document", id, userId);
 
@@ -80,10 +85,10 @@ public class LegalDocumentController {
      */
     @PostMapping
     public ResponseEntity<LegalDocumentResponse> uploadDocument(
-            @RequestParam Long documentTypeId,
+            @RequestParam @NotNull(message = "Document type ID is required") @Positive(message = "Document type ID must be positive") Long documentTypeId,
             @RequestParam(required = false) String expiryDate,
             @RequestParam(required = false) String customFields,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") @NotNull(message = "File is required") MultipartFile file) {
 
         Long userId = getCurrentUserId();
         logger.info("POST /api/documents - User {} uploading document type {}", userId, documentTypeId);
@@ -115,7 +120,7 @@ public class LegalDocumentController {
      * GET /api/documents/{id}/download - Download document file
      */
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
         Long userId = getCurrentUserId();
         logger.info("GET /api/documents/{}/download - User {} downloading document", id, userId);
 
@@ -135,7 +140,7 @@ public class LegalDocumentController {
      * DELETE /api/documents/{id} - Delete document (only PENDING or REJECTED)
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDocument(@PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id) {
         Long userId = getCurrentUserId();
         logger.info("DELETE /api/documents/{} - User {} deleting document", id, userId);
 
@@ -148,10 +153,10 @@ public class LegalDocumentController {
      */
     @PostMapping("/{id}/reupload")
     public ResponseEntity<LegalDocumentResponse> reuploadDocument(
-            @PathVariable Long id,
+            @PathVariable @NotNull(message = "Document ID is required") @Positive(message = "Document ID must be positive") Long id,
             @RequestParam(required = false) String expiryDate,
             @RequestParam(required = false) String customFields,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") @NotNull(message = "File is required") MultipartFile file) {
 
         Long userId = getCurrentUserId();
         logger.info("POST /api/documents/{}/reupload - User {} re-uploading document", id, userId);

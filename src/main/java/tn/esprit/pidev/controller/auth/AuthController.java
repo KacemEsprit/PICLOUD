@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,14 +32,16 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        logger.info("POST /api/auth/register - Registering new user: {}", request.getUsername());
         User user = authService.registerUser(request);
         return ResponseEntity.ok(new AuthResponse(null, user.getId(), user.getUsername(),
                 user.getEmail(), user.getName(), user.getRole().toString()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        logger.info("POST /api/auth/login - Login attempt");
         Authentication authentication = authService.authenticateUser(request);
         String token = jwtUtil.generateJwtToken(authentication);
 
@@ -53,7 +56,9 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> refreshToken(@NotNull(message = "Authorization header is required") 
+                                         @RequestHeader("Authorization") String authHeader) {
+        logger.info("POST /api/auth/refresh - Refreshing token");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().body("Missing or invalid token");
         }
