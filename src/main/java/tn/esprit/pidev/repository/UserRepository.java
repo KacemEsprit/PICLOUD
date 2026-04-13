@@ -19,6 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:role IS NULL OR u.role = :role)")
     List<User> searchUsers(@Param("keyword") String keyword, @Param("role") RoleEnum role);
+    List<User> findByRole(RoleEnum role);
 
     boolean existsByRole(RoleEnum role);
 }
