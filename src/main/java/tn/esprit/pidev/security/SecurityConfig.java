@@ -48,6 +48,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // ============================================
+                        // SWAGGER/OPENAPI ENDPOINTS - No authentication required
+                        // ============================================
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        
+                        // ============================================
                         // PUBLIC ENDPOINTS - No authentication required
                         // ============================================
                         .requestMatchers("/api/auth/register").permitAll()
@@ -55,7 +64,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/forget-password").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         
                         // Static files served from htdocs (accessible to all)
                         .requestMatchers("/pidev-uploads/**").permitAll()
