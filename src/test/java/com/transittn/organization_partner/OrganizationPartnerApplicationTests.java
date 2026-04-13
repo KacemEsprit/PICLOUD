@@ -1,4 +1,4 @@
-package com.transittn.organization_partner;
+package tn.esprit.pidev;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
