@@ -193,6 +193,10 @@ public class ProfileServiceImpl implements ProfileService {
      * Convert User entity to ProfileResponse DTO
      */
     private ProfileResponse convertToProfileResponse(User user) {
+        String photoPath = null;
+        if (user.getPhoto() != null && user.getPhoto().length > 0) {
+            photoPath = new String(user.getPhoto());
+        }
         return new ProfileResponse(
                 user.getId(),
                 user.getUsername(),
@@ -200,6 +204,7 @@ public class ProfileServiceImpl implements ProfileService {
                 user.getName(),
                 user.getCin(),
                 user.getRole().toString(),
+                photoPath,
                 user.getPhotoContentType(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()

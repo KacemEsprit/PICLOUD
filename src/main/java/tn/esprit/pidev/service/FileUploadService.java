@@ -48,7 +48,7 @@ public class FileUploadService {
      * Upload file and return the storage path
      * @param file MultipartFile to upload
      * @param userId User ID (for organizing files)
-     * @return Relative file path where stored
+     * @return Relative file path where stored (using forward slashes for cross-platform compatibility)
      */
     public String uploadFile(MultipartFile file, Long userId) {
         try {
@@ -69,8 +69,8 @@ public class FileUploadService {
             Files.write(Paths.get(filePath), file.getBytes());
             logger.info("✓ File uploaded successfully: {}", filePath);
 
-            // Return relative path for storage in database
-            return userId + File.separator + uniqueFilename;
+            // Return relative path for storage in database (using forward slashes for cross-platform compatibility)
+            return userId + "/" + uniqueFilename;
 
         } catch (IOException e) {
             logger.error("Failed to upload file: {}", e.getMessage());
@@ -96,12 +96,14 @@ public class FileUploadService {
 
     /**
      * Download file and return bytes
-     * @param relativePath Relative path from database
+     * @param relativePath Relative path from database (may contain forward slashes)
      * @return File bytes
      */
     public byte[] downloadFile(String relativePath) {
         try {
-            String fullPath = uploadDir + File.separator + relativePath;
+            // Convert forward slashes to platform-specific separator for file system access
+            String normalizedPath = relativePath.replace("/", File.separator);
+            String fullPath = uploadDir + File.separator + normalizedPath;
             Path filePath = Paths.get(fullPath);
 
             if (!Files.exists(filePath)) {
@@ -117,11 +119,13 @@ public class FileUploadService {
 
     /**
      * Delete file from storage
-     * @param relativePath Relative path from database
+     * @param relativePath Relative path from database (may contain forward slashes)
      */
     public void deleteFile(String relativePath) {
         try {
-            String fullPath = uploadDir + File.separator + relativePath;
+            // Convert forward slashes to platform-specific separator for file system access
+            String normalizedPath = relativePath.replace("/", File.separator);
+            String fullPath = uploadDir + File.separator + normalizedPath;
             Path filePath = Paths.get(fullPath);
 
             if (Files.exists(filePath)) {

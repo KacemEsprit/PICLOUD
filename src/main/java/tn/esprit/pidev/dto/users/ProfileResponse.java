@@ -13,6 +13,7 @@ public class ProfileResponse {
     private String name;
     private Long cin;
     private String role;
+    private String photoPath;
     private String photoContentType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -22,7 +23,7 @@ public class ProfileResponse {
     }
 
     public ProfileResponse(Long id, String username, String email, String name, Long cin, 
-                          String role, String photoContentType, LocalDateTime createdAt, 
+                          String role, String photoPath, String photoContentType, LocalDateTime createdAt, 
                           LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
@@ -30,6 +31,7 @@ public class ProfileResponse {
         this.name = name;
         this.cin = cin;
         this.role = role;
+        this.photoPath = photoPath;
         this.photoContentType = photoContentType;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -82,6 +84,14 @@ public class ProfileResponse {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getPhotoPath() {
+        return photoPath;
+    }
+
+    public void setPhotoPath(String photoPath) {
+        this.photoPath = photoPath;
     }
 
     public String getPhotoContentType() {
