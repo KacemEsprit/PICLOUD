@@ -21,7 +21,7 @@ public class SwaggerConfig {
                                 .name("PIDEV Team")
                                 .email("support@pidev.com")))
                 .addServersItem(new Server()
-                        .url("http://localhost:8080")
+                        .url("http://localhost:8081")
                         .description("Local Server"));
     }
 }
