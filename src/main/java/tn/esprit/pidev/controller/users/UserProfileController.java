@@ -24,7 +24,7 @@ import jakarta.validation.constraints.NotNull;
 @RestController
 @RequestMapping("/api/profile")
 @CrossOrigin(origins = "*", maxAge = 3600)
-@PreAuthorize("hasAnyRole('AGENT', 'OPERATOR', 'PASSENGER')")
+@PreAuthorize("isAuthenticated()")
 public class UserProfileController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileController.class);
@@ -105,4 +105,5 @@ public class UserProfileController {
         return ResponseEntity.ok(updatedProfile);
     }
 }
+
 

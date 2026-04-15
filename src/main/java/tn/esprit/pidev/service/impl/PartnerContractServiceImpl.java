@@ -28,14 +28,16 @@ public class PartnerContractServiceImpl implements PartnerContractService {
                 .startDate(contract.getStartDate())
                 .endDate(contract.getEndDate())
                 .description(contract.getDescription())
-                .organizationId(contract.getOrganization() != null ?
-                        contract.getOrganization().getId() : null)
-                .organizationName(contract.getOrganization() != null ?
-                        contract.getOrganization().getName() : "—")
-                .partnerId(contract.getPartner() != null ?
-                        contract.getPartner().getId() : null)
-                .partnerName(contract.getPartner() != null ?
-                        contract.getPartner().getName() : "—")
+                .organizationId(contract.getOrganization() != null ? contract.getOrganization().getId() : null)
+                .organizationName(contract.getOrganization() != null ? contract.getOrganization().getName() : "-")
+                .partnerId(contract.getPartner() != null ? contract.getPartner().getId() : null)
+                .partnerName(contract.getPartner() != null ? contract.getPartner().getName() : "-")
+                .isSigned(contract.getIsSigned())
+                .signatureValid(contract.getSignatureValid())
+                .signedBy(contract.getSignedBy())
+                .signedAt(contract.getSignedAt())
+                .signatureHash(contract.getSignatureHash())
+                .contentHash(contract.getContentHash())
                 .build();
     }
 
@@ -73,42 +75,31 @@ public class PartnerContractServiceImpl implements PartnerContractService {
     }
 
     @Override
-    public void delete(Long id) {
-        contractRepository.deleteById(id);
-    }
+    public void delete(Long id) { contractRepository.deleteById(id); }
 
     @Override
     public PartnerContractDTO getById(Long id) {
-        return contractRepository.findById(id)
-                .map(this::toDTO)
+        return contractRepository.findById(id).map(this::toDTO)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
     }
 
     @Override
     public List<PartnerContractDTO> getAll() {
-        return contractRepository.findAll()
-                .stream().map(this::toDTO)
-                .collect(Collectors.toList());
+        return contractRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<PartnerContractDTO> getByOrganizationId(Long organizationId) {
-        return contractRepository.findByOrganizationId(organizationId)
-                .stream().map(this::toDTO)
-                .collect(Collectors.toList());
+        return contractRepository.findByOrganizationId(organizationId).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<PartnerContractDTO> getByPartnerId(Long partnerId) {
-        return contractRepository.findByPartnerId(partnerId)
-                .stream().map(this::toDTO)
-                .collect(Collectors.toList());
+        return contractRepository.findByPartnerId(partnerId).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<PartnerContractDTO> getByStatus(ContractStatus status) {
-        return contractRepository.findByStatus(status)
-                .stream().map(this::toDTO)
-                .collect(Collectors.toList());
+        return contractRepository.findByStatus(status).stream().map(this::toDTO).collect(Collectors.toList());
     }
 }

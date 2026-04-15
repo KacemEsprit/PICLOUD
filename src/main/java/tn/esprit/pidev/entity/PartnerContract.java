@@ -1,5 +1,4 @@
 package tn.esprit.pidev.entity;
-
 import tn.esprit.pidev.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,9 +25,30 @@ public class PartnerContract {
 
     private Date startDate;
     private Date endDate;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private LocalDateTime createdAt;
+
+    // Digital Signature Fields
+    @Column(name = "signature_hash", length = 64)
+    private String signatureHash;
+
+    @Column(name = "signed_at")
+    private LocalDateTime signedAt;
+
+    @Column(name = "signed_by")
+    private String signedBy;
+
+    @Column(name = "is_signed")
+    private Boolean isSigned = false;
+
+    @Column(name = "signature_valid")
+    private Boolean signatureValid = false;
+
+    @Column(name = "content_hash", length = 64)
+    private String contentHash;
 
     @ManyToOne
     @JoinColumn(name = "organization_id")
@@ -41,5 +61,7 @@ public class PartnerContract {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.isSigned == null) this.isSigned = false;
+        if (this.signatureValid == null) this.signatureValid = false;
     }
 }

@@ -79,13 +79,13 @@ public class PdfController {
             </head>
             <body>
               <div class="header">
-                <div class="logo">🚌 TransitTN</div>
+                <div class="logo">TransitTN TransitTN</div>
                 <div class="title">PARTNERSHIP CONTRACT</div>
                 <div>Tunisia Public Transport Platform</div>
               </div>
 
               <div class="section">
-                <h3>📋 Contract Information</h3>
+                <h3>Contrat Contract Information</h3>
                 <div class="row"><span class="label">Contract Type:</span><span>%s</span></div>
                 <div class="row"><span class="label">Status:</span><span class="badge">%s</span></div>
                 <div class="row"><span class="label">Start Date:</span><span>%s</span></div>
@@ -94,14 +94,14 @@ public class PdfController {
 
               <div class="parties">
                 <div class="party-box">
-                  <h3>🏢 Party 1 — Organization</h3>
+                  <h3>Organisation Party 1 — Organization</h3>
                   <div class="row"><span class="label">Name:</span><span>%s</span></div>
                   <div class="row"><span class="label">Email:</span><span>%s</span></div>
                   <div class="row"><span class="label">Phone:</span><span>%s</span></div>
                   <div class="row"><span class="label">Type:</span><span>%s</span></div>
                 </div>
                 <div class="party-box">
-                  <h3>🤝 Party 2 — Partner</h3>
+                  <h3>Partenaire Party 2 — Partner</h3>
                   <div class="row"><span class="label">Name:</span><span>%s</span></div>
                   <div class="row"><span class="label">Industry:</span><span>%s</span></div>
                   <div class="row"><span class="label">Email:</span><span>%s</span></div>
@@ -111,7 +111,7 @@ public class PdfController {
               </div>
 
               <div class="section">
-                <h3>📝 Description</h3>
+                <h3>Details Description</h3>
                 <p>%s</p>
               </div>
 
@@ -126,7 +126,7 @@ public class PdfController {
                 </div>
                 <div class="signature-box">
                   <div class="signature-line">TransitTN Signature</div>
-                  <div>🚌 TransitTN Platform</div>
+                  <div>TransitTN TransitTN Platform</div>
                 </div>
               </div>
 
