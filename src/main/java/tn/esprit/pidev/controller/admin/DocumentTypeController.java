@@ -25,7 +25,7 @@ import jakarta.validation.constraints.NotBlank;
 /**
  * REST Controller for Document Type Management (ADMIN operations)
  */
-@RestController
+@RestController(value = "adminDocumentTypeController")
 @RequestMapping("/api/admin/document-types")
 @CrossOrigin(origins = "*", maxAge = 3600)
 @PreAuthorize("hasRole('ADMIN')")

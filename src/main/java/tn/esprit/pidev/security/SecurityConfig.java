@@ -74,6 +74,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/refresh").authenticated()
                         .requestMatchers("/api/profile/**").authenticated()
                         .requestMatchers("/api/documents/**").authenticated()
+                        .requestMatchers("GET", "/api/document-types").authenticated()
+                        .requestMatchers("GET", "/api/document-types/**").authenticated()
 
                         // ============================================
                         // ADMIN ENDPOINTS - ADMIN role only
@@ -85,9 +87,9 @@ public class SecurityConfig {
 
                         // Admin Document Management
                         .requestMatchers("/api/admin/documents/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/documents/*/approve").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/documents/*/reject").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/documents/*/request-update").hasRole("ADMIN")
+                        .requestMatchers("POST", "/api/admin/documents/{id}/approve").hasRole("ADMIN")
+                        .requestMatchers("POST", "/api/admin/documents/{id}/reject").hasRole("ADMIN")
+                        .requestMatchers("POST", "/api/admin/documents/{id}/request-update").hasRole("ADMIN")
 
                         // Admin Document Type Management
                         .requestMatchers("/api/admin/document-types/**").hasRole("ADMIN")
@@ -122,8 +124,8 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/api/documents/**").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
                         .requestMatchers("POST", "/api/documents").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
                         .requestMatchers("DELETE", "/api/documents/**").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
-                        .requestMatchers("POST", "/api/documents/**/reupload").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
-                        .requestMatchers("GET", "/api/documents/**/download").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
+                        .requestMatchers("POST", "/api/documents/{id}/reupload").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
+                        .requestMatchers("GET", "/api/documents/{id}/download").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
 
                         // ============================================
                         // DEFAULT - Deny all other requests

@@ -2,9 +2,11 @@ package tn.esprit.pidev.controller.admin;
 
 import tn.esprit.pidev.dto.Documents.LegalDocumentResponse;
 import tn.esprit.pidev.entity.LegalDocument;
+import tn.esprit.pidev.entity.User;
 import tn.esprit.pidev.exception.FileUploadException;
 import tn.esprit.pidev.service.admin.LegalDocumentService;
 import tn.esprit.pidev.service.FileUploadService;
+import tn.esprit.pidev.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +26,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -43,6 +45,9 @@ public class LegalDocumentController {
 
     @Autowired
     private FileUploadService fileUploadService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * GET /api/documents - Get all documents for current user
@@ -94,9 +99,11 @@ public class LegalDocumentController {
         logger.info("POST /api/documents - User {} uploading document type {}", userId, documentTypeId);
 
         try {
-            LocalDateTime expiryDateTime = null;
+            LocalDateTime expiryDateTime;
             if (expiryDate != null && !expiryDate.isEmpty()) {
                 expiryDateTime = LocalDateTime.parse(expiryDate, DateTimeFormatter.ISO_DATE_TIME);
+            } else {
+                expiryDateTime = null;
             }
 
             LegalDocument document = legalDocumentService.uploadDocument(
@@ -169,7 +176,7 @@ public class LegalDocumentController {
             legalDocumentService.deleteDocument(id, userId);
 
             // Upload as new document
-            LocalDateTime expiryDateTime = null;
+            LocalDateTime expiryDateTime;
             if (expiryDate != null && !expiryDate.isEmpty()) {
                 expiryDateTime = LocalDateTime.parse(expiryDate, DateTimeFormatter.ISO_DATE_TIME);
             } else {
@@ -195,12 +202,41 @@ public class LegalDocumentController {
 
     /**
      * Helper: Get current user ID from security context
+     * Extracts username from authenticated principal and looks up user ID from database
      */
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // In a real implementation, extract user ID from JWT token or UserDetails
-        // For now, return a placeholder
-        return 1L;
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            logger.warn("No authenticated user found in security context");
+            throw new IllegalStateException("User must be authenticated");
+        }
+
+        // Get the principal (UserDetails)
+        Object principal = auth.getPrincipal();
+        String username;
+        
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
+        if (username == null || username.isEmpty()) {
+            logger.warn("Could not extract username from authentication");
+            throw new IllegalStateException("Could not determine authenticated user");
+        }
+
+        // Look up user ID from database using username
+        final String finalUsername = username;
+        User user = userRepository.findByUsername(finalUsername)
+                .orElseThrow(() -> {
+                    logger.error("User not found in database: {}", finalUsername);
+                    return new IllegalStateException("Authenticated user not found in database");
+                });
+
+        logger.debug("Current user ID: {} (username: {})", user.getId(), username);
+        return user.getId();
     }
 
     /**

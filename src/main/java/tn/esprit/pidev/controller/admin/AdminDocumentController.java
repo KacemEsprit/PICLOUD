@@ -5,7 +5,9 @@ import tn.esprit.pidev.dto.Documents.LegalDocumentResponse;
 import tn.esprit.pidev.dto.Documents.DocumentSearchCriteria;
 import tn.esprit.pidev.entity.LegalDocument;
 import tn.esprit.pidev.entity.DocumentStatusEnum;
+import tn.esprit.pidev.entity.User;
 import tn.esprit.pidev.service.admin.LegalDocumentService;
+import tn.esprit.pidev.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -35,6 +38,9 @@ public class AdminDocumentController {
 
     @Autowired
     private LegalDocumentService legalDocumentService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * GET /api/admin/documents - List all documents with advanced search
@@ -204,12 +210,41 @@ public class AdminDocumentController {
     }
 
     /**
-     * Helper: Get current admin user ID
+     * Helper: Get current admin user ID from security context
+     * Extracts username from authenticated principal and looks up user ID from database
      */
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // In a real implementation, extract user ID from JWT token or UserDetails
-        // For now, return a placeholder
-        return 1L;
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            logger.warn("No authenticated admin user found in security context");
+            throw new IllegalStateException("Admin user must be authenticated");
+        }
+
+        // Get the principal (UserDetails)
+        Object principal = auth.getPrincipal();
+        String username;
+        
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
+        if (username == null || username.isEmpty()) {
+            logger.warn("Could not extract username from authentication");
+            throw new IllegalStateException("Could not determine authenticated admin user");
+        }
+
+        // Look up user ID from database using username
+        final String finalUsername = username;
+        User user = userRepository.findByUsername(finalUsername)
+                .orElseThrow(() -> {
+                    logger.error("Admin user not found in database: {}", finalUsername);
+                    return new IllegalStateException("Authenticated admin user not found in database");
+                });
+
+        logger.debug("Current admin user ID: {} (username: {})", user.getId(), username);
+        return user.getId();
     }
 }
