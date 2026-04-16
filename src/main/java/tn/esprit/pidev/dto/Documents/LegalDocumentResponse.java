@@ -10,6 +10,7 @@ public class LegalDocumentResponse {
 
     private Long id;
     private Long userId;
+    private String username; // New field for frontend
     private Long documentTypeId;
     private String documentUrl;
     private LocalDateTime uploadDate;
@@ -19,6 +20,20 @@ public class LegalDocumentResponse {
 
     public LegalDocumentResponse() {}
 
+    public LegalDocumentResponse(Long id, Long userId, String username, Long documentTypeId, String documentUrl,
+                                 LocalDateTime uploadDate, LocalDateTime expiryDate,
+                                 DocumentStatusEnum status) {
+        this.id = id;
+        this.userId = userId;
+        this.username = username;
+        this.documentTypeId = documentTypeId;
+        this.documentUrl = documentUrl;
+        this.uploadDate = uploadDate;
+        this.expiryDate = expiryDate;
+        this.status = status;
+    }
+
+    // Legacy constructor without username for backward compatibility
     public LegalDocumentResponse(Long id, Long userId, Long documentTypeId, String documentUrl,
                                  LocalDateTime uploadDate, LocalDateTime expiryDate,
                                  DocumentStatusEnum status) {
@@ -45,6 +60,14 @@ public class LegalDocumentResponse {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public Long getDocumentTypeId() {

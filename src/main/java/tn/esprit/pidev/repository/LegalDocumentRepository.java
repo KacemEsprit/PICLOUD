@@ -80,4 +80,60 @@ public interface LegalDocumentRepository extends JpaRepository<LegalDocument, Lo
      * Count pending documents for a user
      */
     long countByUserIdAndStatus(Long userId, DocumentStatusEnum status);
+
+    /**
+     * Find documents expiring within X days (paginated) with eager loading
+     */
+    @Query("SELECT DISTINCT ld FROM LegalDocument ld LEFT JOIN FETCH ld.documentType WHERE ld.expiryDate IS NOT NULL AND " +
+           "ld.expiryDate BETWEEN :from AND :to")
+    Page<LegalDocument> findExpiringDocuments(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageable);
+
+    /**
+     * Find all expired documents with eager loading
+     */
+    @Query("SELECT DISTINCT ld FROM LegalDocument ld LEFT JOIN FETCH ld.documentType WHERE ld.expiryDate IS NOT NULL AND ld.expiryDate < :now")
+    Page<LegalDocument> findAllExpiredDocuments(@Param("now") LocalDateTime now, Pageable pageable);
+
+    /**
+     * Find documents expiring within X days for a specific user (paginated) with eager loading
+     */
+    @Query("SELECT DISTINCT ld FROM LegalDocument ld LEFT JOIN FETCH ld.documentType WHERE ld.userId = :userId AND ld.expiryDate IS NOT NULL AND " +
+           "ld.expiryDate BETWEEN :from AND :to")
+    Page<LegalDocument> findUserExpiringDocuments(@Param("userId") Long userId, @Param("from") LocalDateTime from, 
+                                                  @Param("to") LocalDateTime to, Pageable pageable);
+
+    /**
+     * Find documents expiring within X days by document type (paginated) with eager loading
+     */
+    @Query("SELECT DISTINCT ld FROM LegalDocument ld LEFT JOIN FETCH ld.documentType WHERE ld.documentType.id = :documentTypeId AND ld.expiryDate IS NOT NULL AND " +
+           "ld.expiryDate BETWEEN :from AND :to")
+    Page<LegalDocument> findExpiringDocumentsByType(@Param("documentTypeId") Long documentTypeId, 
+                                                    @Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageable);
+
+    /**
+     * Count documents expiring within 7 days
+     */
+    @Query("SELECT COUNT(ld) FROM LegalDocument ld WHERE ld.expiryDate IS NOT NULL AND " +
+           "ld.expiryDate BETWEEN :today AND :sevenDaysLater")
+    long countDocumentsExpiringWithinSevenDays(@Param("today") LocalDateTime today, @Param("sevenDaysLater") LocalDateTime sevenDaysLater);
+
+    /**
+     * Count documents expiring within 30 days
+     */
+    @Query("SELECT COUNT(ld) FROM LegalDocument ld WHERE ld.expiryDate IS NOT NULL AND " +
+           "ld.expiryDate BETWEEN :today AND :thirtyDaysLater")
+    long countDocumentsExpiringWithinThirtyDays(@Param("today") LocalDateTime today, @Param("thirtyDaysLater") LocalDateTime thirtyDaysLater);
+
+    /**
+     * Count documents expiring within 90 days
+     */
+    @Query("SELECT COUNT(ld) FROM LegalDocument ld WHERE ld.expiryDate IS NOT NULL AND " +
+           "ld.expiryDate BETWEEN :today AND :ninetyDaysLater")
+    long countDocumentsExpiringWithinNinetyDays(@Param("today") LocalDateTime today, @Param("ninetyDaysLater") LocalDateTime ninetyDaysLater);
+
+    /**
+     * Count already expired documents
+     */
+    @Query("SELECT COUNT(ld) FROM LegalDocument ld WHERE ld.expiryDate IS NOT NULL AND ld.expiryDate < :today")
+    long countAlreadyExpiredDocuments(@Param("today") LocalDateTime today);
 }

@@ -5,11 +5,13 @@ import tn.esprit.pidev.dto.Documents.DocumentSearchCriteria;
 import tn.esprit.pidev.entity.LegalDocument;
 import tn.esprit.pidev.entity.DocumentStatusEnum;
 import tn.esprit.pidev.entity.DocumentType;
+import tn.esprit.pidev.entity.User;
 import tn.esprit.pidev.exception.DocumentNotFoundException;
 import tn.esprit.pidev.exception.DocumentTypeNotFoundException;
 import tn.esprit.pidev.exception.InvalidDocumentException;
 import tn.esprit.pidev.repository.LegalDocumentRepository;
 import tn.esprit.pidev.repository.DocumentTypeRepository;
+import tn.esprit.pidev.repository.UserRepository;
 import tn.esprit.pidev.service.EmailService;
 import tn.esprit.pidev.service.FileUploadService;
 import org.slf4j.Logger;
@@ -40,6 +42,9 @@ public class LegalDocumentService {
 
     @Autowired
     private DocumentTypeRepository documentTypeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private FileUploadService fileUploadService;
@@ -364,9 +369,18 @@ public class LegalDocumentService {
      * Convert entity to DTO (without file content)
      */
     public LegalDocumentResponse toDto(LegalDocument document) {
+        // Get username from User entity
+        String username = null;
+        if (document.getUserId() != null) {
+            username = userRepository.findById(document.getUserId())
+                .map(User::getUsername)
+                .orElse(null);
+        }
+
         LegalDocumentResponse response = new LegalDocumentResponse(
             document.getId(),
             document.getUserId(),
+            username,
             document.getDocumentTypeId(),
             document.getDocumentUrl(),
             document.getUploadDate(),
