@@ -3,11 +3,14 @@ package tn.esprit.pidev.interceptor;
 import tn.esprit.pidev.dto.AuditLogDTO;
 import tn.esprit.pidev.enums.AuditLogActionType;
 import tn.esprit.pidev.enums.AuditLogStatus;
+import tn.esprit.pidev.entity.RoleEnum;
 import tn.esprit.pidev.repository.UserRepository;
 import tn.esprit.pidev.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,6 +24,8 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class AuditLoggingInterceptor implements HandlerInterceptor {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuditLoggingInterceptor.class);
 
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
@@ -47,8 +52,19 @@ public class AuditLoggingInterceptor implements HandlerInterceptor {
                     String username = authentication.getName();
                     Long userId = extractUserIdFromAuth(authentication);
                     
+                    logger.debug("Audit Log - Endpoint: {}, Username: {}, UserId: {}", path, username, userId);
+                    
                     // Only log if we successfully extracted the user ID
                     if (userId != null) {
+                        // Check if user is an admin - skip logging for admins
+                        RoleEnum userRole = extractUserRoleFromAuth(authentication);
+                        logger.debug("Audit Log - User Role: {}", userRole);
+                        
+                        if (userRole == RoleEnum.ADMIN) {
+                            logger.debug("Audit Log - Skipping ADMIN user: {}", username);
+                            return;
+                        }
+
                         AuditLogActionType actionType = determineActionType(path, method);
                         AuditLogStatus auditStatus = (status >= 200 && status < 300) ? AuditLogStatus.SUCCESS : AuditLogStatus.FAILED;
                         String ipAddress = getClientIpAddress(request);
@@ -71,22 +87,29 @@ public class AuditLoggingInterceptor implements HandlerInterceptor {
                         }
 
                         auditLogService.logAction(auditLog);
+                        logger.debug("Audit Log - Created entry for user: {} ({})", username, actionType);
+                    } else {
+                        logger.debug("Audit Log - Could not extract userId for user: {}", username);
                     }
+                } else {
+                    logger.debug("Audit Log - Authentication is null or not authenticated");
                 }
+            } else {
+                logger.debug("Audit Log - Endpoint not logged: {}", path);
             }
         } catch (Exception e) {
-            // Silently fail - don't break the request if logging fails
-            e.printStackTrace();
+            logger.error("Error in audit logging: {}", e.getMessage(), e);
         }
     }
 
     private boolean shouldLogEndpoint(String path) {
-        // Log important endpoints
-        return path.contains("/api/documents/") ||
-               path.contains("/api/admin/documents") ||
-               path.contains("/api/auth/") ||
+        // Log important endpoints - be more inclusive
+        return path.contains("/api/documents") ||
+               path.contains("/api/auth") ||
                path.contains("/api/admin/users") ||
-               path.contains("/api/users/");
+               path.contains("/api/users") ||
+               path.contains("/api/legal") ||
+               path.contains("/api/profile");
     }
 
     private AuditLogActionType determineActionType(String path, String method) {
@@ -148,6 +171,21 @@ public class AuditLoggingInterceptor implements HandlerInterceptor {
         try {
             return userRepository.findByUsername(username)
                     .map(user -> user.getId())
+                    .orElse(null);
+        } catch (Exception e) {
+            // If lookup fails, return null
+            return null;
+        }
+    }
+
+    private RoleEnum extractUserRoleFromAuth(Authentication authentication) {
+        // Extract username from authentication
+        String username = authentication.getName();
+        
+        // Look up user role from the database using username
+        try {
+            return userRepository.findByUsername(username)
+                    .map(user -> user.getRole())
                     .orElse(null);
         } catch (Exception e) {
             // If lookup fails, return null

@@ -80,6 +80,13 @@ public class AuditLogServiceImpl implements tn.esprit.pidev.service.AuditLogServ
         return auditLogRepository.findByResourceTypeAndResourceId(resourceType, resourceId, pageable).map(this::mapToDTO);
     }
 
+    @Override
+    @Transactional
+    public int deleteOldAuditLogs(int retentionDays) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(retentionDays);
+        return auditLogRepository.deleteAuditLogsOlderThan(cutoffDate);
+    }
+
     /**
      * Helper method to convert AuditLog entity to DTO
      */

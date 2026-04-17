@@ -47,5 +47,10 @@ public interface AuditLogService {
      * Get audit logs by resource
      */
     Page<AuditLogDTO> getActivityLogsByResource(String resourceType, Long resourceId, Pageable pageable);
-}
 
+    /**
+     * Delete audit logs older than the specified number of days
+     * Used for cleanup of old activity logs
+     */
+    int deleteOldAuditLogs(int retentionDays);
+}

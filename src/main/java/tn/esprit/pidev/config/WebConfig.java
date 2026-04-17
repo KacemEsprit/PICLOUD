@@ -32,7 +32,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         if (auditLoggingInterceptor != null) {
-            registry.addInterceptor(auditLoggingInterceptor);
+            registry.addInterceptor(auditLoggingInterceptor)
+                    .addPathPatterns("/api/**"); // Intercept all API endpoints
         }
     }
 
