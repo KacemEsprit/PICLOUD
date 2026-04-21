@@ -7,6 +7,7 @@ import tn.esprit.pidev.service.OrganizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -56,3 +57,4 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationService.getByCoverageType(coverageType));
     }
 }
+

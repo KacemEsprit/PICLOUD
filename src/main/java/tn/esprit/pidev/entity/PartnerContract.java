@@ -1,6 +1,7 @@
 package tn.esprit.pidev.entity;
 import tn.esprit.pidev.enums.*;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -23,10 +24,14 @@ public class PartnerContract {
     @Enumerated(EnumType.STRING)
     private ContractStatus status;
 
+    @NotNull(message = "Start date is required")
+    @FutureOrPresent(message = "Start date must be today or in the future")
     private Date startDate;
+    @NotNull(message = "End date is required")
     private Date endDate;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 5000, message = "Description must not exceed 5000 characters")
     private String description;
 
     private LocalDateTime createdAt;
@@ -65,3 +70,4 @@ public class PartnerContract {
         if (this.signatureValid == null) this.signatureValid = false;
     }
 }
+

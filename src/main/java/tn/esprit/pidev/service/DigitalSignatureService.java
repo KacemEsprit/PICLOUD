@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import java.util.Map;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -85,6 +87,21 @@ public class DigitalSignatureService {
             contract.setSignatureValid(false);
             contractRepository.save(contract);
             logger.warn("FRAUD DETECTED on contract {} - content has been modified after signing!", contractId);
+            
+            // Send n8n webhook notification
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                Map<String, Object> payload = Map.of(
+                    "contractId", contractId,
+                    "partnerName", contract.getPartner() != null ? contract.getPartner().getName() : "Unknown",
+                    "fraudDetected", true
+                );
+                restTemplate.postForObject("http://localhost:5678/webhook/fraud-alert", payload, String.class);
+                logger.info("n8n fraud alert webhook triggered successfully");
+            } catch (Exception ex) {
+                logger.error("Failed to trigger n8n webhook: {}", ex.getMessage());
+            }
+            
             return new FraudCheckResult(true, false,
                 "FRAUD DETECTED: Contract content was modified after signing!", contract);
         }
@@ -123,3 +140,5 @@ public class DigitalSignatureService {
         PartnerContract contract
     ) {}
 }
+
+
