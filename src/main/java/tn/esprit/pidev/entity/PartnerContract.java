@@ -25,7 +25,7 @@ public class PartnerContract {
     private ContractStatus status;
 
     @NotNull(message = "Start date is required")
-    @FutureOrPresent(message = "Start date must be today or in the future")
+    // @FutureOrPresent removed: blocks update of existing contracts with past startDate
     private Date startDate;
     @NotNull(message = "End date is required")
     private Date endDate;
