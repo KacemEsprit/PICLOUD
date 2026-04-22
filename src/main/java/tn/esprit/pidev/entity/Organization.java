@@ -19,7 +19,7 @@ public class Organization {
 
     @NotBlank(message = "Organization name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-\\.''���������������]+$",
+    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-\\.''ÃƒÂ ÃƒÂ¢ÃƒÂ¤ÃƒÂ©ÃƒÂ¨ÃƒÂªÃƒÂ«ÃƒÂ®ÃƒÂ¯ÃƒÂ´ÃƒÂ¶ÃƒÂ¹ÃƒÂ»ÃƒÂ¼ÃƒÂ§]+$",
              message = "Name contains invalid characters")
     private String name;
 
@@ -42,10 +42,11 @@ public class Organization {
              message = "Phone number must be a valid Tunisian number (+216XXXXXXXX)")
     private String phoneNumber;
 
-    @Pattern(regexp = "^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$",
+    @Pattern(regexp = "^$|^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$",
              message = "Invalid website URL format")
     private String website;
 
+    @Column(columnDefinition = "TEXT")
     private String logo;
     private String region;
 

@@ -22,6 +22,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .id(org.getId())
                 .name(org.getName())
                 .acronyme(org.getAcronyme())
+                .transportType(org.getTransportType())
                 .email(org.getEmail())
                 .phoneNumber(org.getPhoneNumber())
                 .website(org.getWebsite())
@@ -38,6 +39,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .id(dto.getId())
                 .name(dto.getName())
                 .acronyme(dto.getAcronyme())
+                .transportType(dto.getTransportType())
                 .email(dto.getEmail())
                 .phoneNumber(dto.getPhoneNumber())
                 .website(dto.getWebsite())
@@ -61,6 +63,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
         existing.setName(dto.getName());
         existing.setAcronyme(dto.getAcronyme());
+        existing.setTransportType(dto.getTransportType());
         existing.setEmail(dto.getEmail());
         existing.setPhoneNumber(dto.getPhoneNumber());
         existing.setWebsite(dto.getWebsite());
@@ -105,5 +108,3 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .collect(Collectors.toList());
     }
 }
-
-
