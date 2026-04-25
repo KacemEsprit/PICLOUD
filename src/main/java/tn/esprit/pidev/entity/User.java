@@ -38,6 +38,9 @@ public class User {
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled = true;
 
+    @Column(name = "inactivated_until")
+    private LocalDateTime inactivatedUntil;
+
     @Column(name = "password_reset_token")
     private String passwordResetToken;
 
@@ -157,6 +160,15 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         isEnabled = enabled;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getInactivatedUntil() {
+        return inactivatedUntil;
+    }
+
+    public void setInactivatedUntil(LocalDateTime inactivatedUntil) {
+        this.inactivatedUntil = inactivatedUntil;
         this.updatedAt = LocalDateTime.now();
     }
 

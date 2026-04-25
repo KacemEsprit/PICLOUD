@@ -4,6 +4,7 @@ import tn.esprit.pidev.dto.users.UserResponse;
 import tn.esprit.pidev.dto.admin.UserUpdateRequest;
 import tn.esprit.pidev.dto.admin.UserCreateRequest;
 import tn.esprit.pidev.dto.admin.UserSearchCriteria;
+import tn.esprit.pidev.dto.admin.BanRequest;
 import tn.esprit.pidev.entity.RoleEnum;
 import tn.esprit.pidev.entity.User;
 import tn.esprit.pidev.exception.InvalidFileException;
@@ -136,6 +137,30 @@ public class AdminUserController {
         }
         UserResponse updatedUser = userService.updateUserStatus(id, enabled);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * PATCH /api/admin/users/{id}/ban - Ban user with optional duration
+     * Request body: { "durationDays": 1 | 3 | 7 | 30 | null }
+     * - If durationDays is null: permanent ban
+     * - Otherwise: ban for specified number of days
+     */
+    @PatchMapping("/{id}/ban")
+    public ResponseEntity<UserResponse> banUser(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id, 
+                                               @RequestBody BanRequest request) {
+        logger.info("PATCH /api/admin/users/" + id + "/ban");
+        UserResponse bannedUser = userService.banUser(id, request.getDurationDays());
+        return ResponseEntity.ok(bannedUser);
+    }
+
+    /**
+     * PATCH /api/admin/users/{id}/unban - Unban/activate user
+     */
+    @PatchMapping("/{id}/unban")
+    public ResponseEntity<UserResponse> unbanUser(@PathVariable @NotNull(message = "User ID is required") @Positive(message = "User ID must be positive") Long id) {
+        logger.info("PATCH /api/admin/users/" + id + "/unban");
+        UserResponse unbannedUser = userService.unbanUser(id);
+        return ResponseEntity.ok(unbannedUser);
     }
 
     /**

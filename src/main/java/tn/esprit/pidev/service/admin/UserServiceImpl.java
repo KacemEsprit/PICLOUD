@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -183,6 +184,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse banUser(Long id, Integer durationDays) {
+        logger.info("Banning user id: " + id + " for " + (durationDays == null ? "permanent" : durationDays + " days"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        
+        user.setEnabled(false);
+        
+        if (durationDays == null) {
+            // Permanent ban
+            user.setInactivatedUntil(null);
+        } else {
+            // Temporary ban
+            LocalDateTime banUntil = LocalDateTime.now().plusDays(durationDays);
+            user.setInactivatedUntil(banUntil);
+        }
+        
+        User savedUser = userRepository.save(user);
+        logger.info("User banned successfully: " + id);
+        return convertToResponse(savedUser);
+    }
+
+    @Override
+    public UserResponse unbanUser(Long id) {
+        logger.info("Unbanning user id: " + id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        
+        user.setEnabled(true);
+        user.setInactivatedUntil(null);
+        
+        User savedUser = userRepository.save(user);
+        logger.info("User unbanned successfully: " + id);
+        return convertToResponse(savedUser);
+    }
+
+    @Override
     public UserResponse uploadUserPhoto(Long userId, MultipartFile file) {
         logger.info("Uploading photo for user id: " + userId);
         
@@ -261,7 +298,8 @@ public class UserServiceImpl implements UserService {
                 user.getPhotoContentType(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
-                user.isEnabled()
+                user.isEnabled(),
+                user.getInactivatedUntil()
         );
     }
 

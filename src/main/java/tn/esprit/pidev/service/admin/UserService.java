@@ -22,6 +22,8 @@ public interface UserService {
     UserResponse updateUser(Long id, UserUpdateRequest request);
     UserResponse changeUserRole(Long id, RoleEnum role);
     UserResponse updateUserStatus(Long id, boolean enabled);
+    UserResponse banUser(Long id, Integer durationDays);
+    UserResponse unbanUser(Long id);
 
     // DELETE Operations
     void deleteUser(Long id);  // Soft delete

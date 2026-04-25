@@ -13,8 +13,13 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean enabled;
+    private LocalDateTime inactivatedUntil;
 
     public UserResponse(Long id, String username, String email, String name, Long cin, String role, String photoContentType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean enabled) {
+        this(id, username, email, name, cin, role, photoContentType, createdAt, updatedAt, enabled, null);
+    }
+
+    public UserResponse(Long id, String username, String email, String name, Long cin, String role, String photoContentType, LocalDateTime createdAt, LocalDateTime updatedAt, boolean enabled, LocalDateTime inactivatedUntil) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -25,6 +30,7 @@ public class UserResponse {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.enabled = enabled;
+        this.inactivatedUntil = inactivatedUntil;
     }
 
     // Getters and Setters
@@ -106,5 +112,13 @@ public class UserResponse {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public LocalDateTime getInactivatedUntil() {
+        return inactivatedUntil;
+    }
+
+    public void setInactivatedUntil(LocalDateTime inactivatedUntil) {
+        this.inactivatedUntil = inactivatedUntil;
     }
 }

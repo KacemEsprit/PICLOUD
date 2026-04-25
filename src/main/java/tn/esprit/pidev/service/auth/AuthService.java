@@ -60,6 +60,28 @@ public class AuthService {
             ? loginRequest.getEmail() 
             : loginRequest.getUsername();
         
+        // Check if user exists and validate deactivation status
+        User user = userRepository.findByUsername(identifier)
+                .or(() -> userRepository.findByEmail(identifier))
+                .orElseThrow(() -> new RuntimeException("User not found: " + identifier));
+        
+        // Check if user is deactivated
+        if (!user.isEnabled()) {
+            if (user.getInactivatedUntil() != null && java.time.LocalDateTime.now().isBefore(user.getInactivatedUntil())) {
+                // Temporary ban still active
+                throw new RuntimeException("Account is deactivated until " + user.getInactivatedUntil());
+            } else if (user.getInactivatedUntil() == null) {
+                // Permanent ban
+                throw new RuntimeException("Account is permanently deactivated");
+            } else {
+                // Ban has expired, reactivate the user
+                logger.info("Ban expired for user: " + identifier + ". Reactivating user.");
+                user.setEnabled(true);
+                user.setInactivatedUntil(null);
+                userRepository.save(user);
+            }
+        }
+        
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(identifier, loginRequest.getPassword())
         );
