@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/api/admin/users")
 @CrossOrigin(origins = "*", maxAge = 3600)
-@PreAuthorize("hasRole('ADMIN')")
+
 public class AdminUserController {
 
     private static final Logger logger = Logger.getLogger(AdminUserController.class.getName());
@@ -222,3 +222,4 @@ public class AdminUserController {
         return ResponseEntity.ok(response);
     }
 }
+
