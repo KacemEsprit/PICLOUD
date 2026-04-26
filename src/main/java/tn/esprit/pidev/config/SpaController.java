@@ -12,7 +12,8 @@ public class SpaController {
             "/",
             "/vehicles/**",
             "/maintenance/**",
-            "/lines/**"
+            "/lines/**",
+            "/drivers/**"
     })
     public String forward() {
         return "forward:/index.html";
