@@ -27,7 +27,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    // ...existing code...
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -43,11 +42,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
+        logger.debug("Processing request: {} {}", request.getMethod(), path);
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            
+            logger.debug("Found Authorization Bearer token");
+
             // Try to extract username (works even if token is expired)
             username = jwtUtil.getUserNameFromJwtTokenIgnoreExpiry(token);
+            if (username != null) {
+                logger.debug("Extracted username from token: {}", username);
+            } else {
+                logger.warn("Failed to extract username from token");
+            }
+        } else {
+            logger.debug("No Authorization header or invalid format for path: {}", path);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -61,32 +70,38 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    
+                    logger.debug("Authentication set for user: {} with authorities: {}", username, userDetails.getAuthorities());
+
                     // Refresh token if near expiry (user is active)
                     if (jwtUtil.isTokenNearExpiry(token)) {
                         String newToken = jwtUtil.refreshJwtToken(token);
                         if (newToken != null) {
                             response.setHeader("X-New-Token", newToken);
+                            logger.debug("Token refreshed for user: {}", username);
                         }
                     }
                 } else if (jwtUtil.isTokenExpired(token)) {
+                    logger.debug("Token expired for user: {}, attempting refresh", username);
                     // Token is expired, try to refresh it
                     String newToken = jwtUtil.refreshJwtToken(token);
                     if (newToken != null) {
                         // Successfully refreshed, use the new token
                         response.setHeader("X-New-Token", newToken);
-                        
+                        logger.debug("Token refresh successful for user: {}", username);
+
                         // Set authentication with the refreshed token
                         UserDetails refreshedUserDetails = userDetailsService.loadUserByUsername(username);
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 refreshedUserDetails, null, refreshedUserDetails.getAuthorities());
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
+                    } else {
+                        logger.warn("Token refresh failed for user: {}", username);
                     }
                     // If refresh fails, don't set authentication (user will get 401)
                 }
             } catch (Exception e) {
-                logger.error("Cannot set user authentication: {}", e.getMessage());
+                logger.error("Cannot set user authentication: {}", e.getMessage(), e);
             }
         }
 

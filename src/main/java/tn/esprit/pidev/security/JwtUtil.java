@@ -35,12 +35,15 @@ public class JwtUtil {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .subject(userPrincipal.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key())
                 .compact();
+
+        logger.debug("Generated JWT token for user: {} with expiration: {} ms", userPrincipal.getUsername(), jwtExpirationMs);
+        return token;
     }
 
     public String generateJwtTokenFromUsername(String username) {

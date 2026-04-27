@@ -128,6 +128,23 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/api/documents/{id}/download").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
 
                         // ============================================
+                        // NOTIFICATIONS & INCIDENTS - Authenticated users
+                        // ============================================
+                        .requestMatchers("GET", "/notifications/my").authenticated()
+                        .requestMatchers("GET", "/notifications").authenticated()
+                        .requestMatchers("GET", "/notifications/**").authenticated()
+                        .requestMatchers("POST", "/notifications/**").authenticated()
+                        .requestMatchers("PUT", "/notifications/**").authenticated()
+                        .requestMatchers("DELETE", "/notifications/**").authenticated()
+                        .requestMatchers("PATCH", "/notifications/**").authenticated()
+                        
+                        .requestMatchers("GET", "/incidents").authenticated()
+                        .requestMatchers("GET", "/incidents/**").authenticated()
+                        .requestMatchers("POST", "/incidents/**").authenticated()
+                        .requestMatchers("PUT", "/incidents/**").authenticated()
+                        .requestMatchers("DELETE", "/incidents/**").authenticated()
+
+                        // ============================================
                         // DEFAULT - Deny all other requests
                         // ============================================
                         .anyRequest().denyAll()
