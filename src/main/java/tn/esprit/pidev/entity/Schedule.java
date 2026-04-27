@@ -1,10 +1,10 @@
-package tn.transit.backend.entity;
+package tn.esprit.pidev.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-import tn.transit.backend.entity.enums.DayType;
+import tn.esprit.pidev.entity.enums.DayType;
 import java.time.LocalTime;
 import java.util.List;
 

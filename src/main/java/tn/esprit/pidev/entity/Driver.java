@@ -1,10 +1,10 @@
-package tn.transit.backend.entity;
+package tn.esprit.pidev.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import tn.transit.backend.entity.enums.DriverStatus;
-import tn.transit.backend.entity.enums.LicenseType;
-import tn.transit.backend.entity.enums.LicenseValidationStatus;
+import tn.esprit.pidev.entity.enums.DriverStatus;
+import tn.esprit.pidev.entity.enums.LicenseType;
+import tn.esprit.pidev.entity.enums.LicenseValidationStatus;
 import java.time.LocalDate;
 
 @Entity

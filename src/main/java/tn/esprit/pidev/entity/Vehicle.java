@@ -1,9 +1,9 @@
-package tn.transit.backend.entity;
+package tn.esprit.pidev.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import tn.transit.backend.entity.enums.VehicleStatus;
-import tn.transit.backend.entity.enums.VehicleType;
+import tn.esprit.pidev.entity.enums.VehicleStatus;
+import tn.esprit.pidev.entity.enums.VehicleType;
 import java.time.LocalDate;
 
 @Entity

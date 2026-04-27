@@ -1,12 +1,12 @@
-package tn.transit.backend.service;
+package tn.esprit.pidev.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import tn.transit.backend.entity.Driver;
-import tn.transit.backend.entity.enums.LicenseValidationStatus;
-import tn.transit.backend.repository.DriverRepository;
+import tn.esprit.pidev.entity.Driver;
+import tn.esprit.pidev.entity.enums.LicenseValidationStatus;
+import tn.esprit.pidev.repository.DriverRepository;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -90,8 +90,6 @@ public class LicenseValidationService {
                     aiLicenseType, driver.getLicenseType().name());
             boolean licenseNumberMatches = matchesLicenseNumber(
                     aiLicenseNumber, driver.getLicenseNumber());
-            boolean documentLooksOfficial = Boolean.TRUE.equals(
-                    extracted.getOrDefault("documentLooksOfficial", false));
 
             driver.setAiValidationNote(
                     "AI extracted — " +
@@ -107,8 +105,7 @@ public class LicenseValidationService {
                     && isNotExpired
                     && nameMatches
                     && licenseTypeMatches
-                    && licenseNumberMatches
-                    ) {
+                    && licenseNumberMatches) {
 
                 driver.setValidationStatus(
                         LicenseValidationStatus.APPROVED);
@@ -117,11 +114,9 @@ public class LicenseValidationService {
                                 + driver.getAiValidationNote());
 
             } else {
-
                 // Build rejection reason
                 StringBuilder reason = new StringBuilder(
                         "Validation failed: ");
-
                 if (!isNotExpired)
                     reason.append("License is EXPIRED. ");
                 if (!nameMatches)
@@ -230,4 +225,4 @@ public class LicenseValidationService {
             }
         }
         return dp[s1.length()][s2.length()];
-    }}
+        }}

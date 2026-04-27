@@ -1,9 +1,9 @@
-package tn.transit.backend.repository;
+package tn.esprit.pidev.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import tn.transit.backend.entity.Schedule;
-import tn.transit.backend.entity.enums.DayType;
+import tn.esprit.pidev.entity.Schedule;
+import tn.esprit.pidev.entity.enums.DayType;
 import java.util.List;
 
 @Repository

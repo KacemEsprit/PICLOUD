@@ -1,8 +1,8 @@
-package tn.transit.backend.repository;
+package tn.esprit.pidev.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import tn.transit.backend.entity.Stop;
+import tn.esprit.pidev.entity.Stop;
 import java.util.List;
 
 @Repository

@@ -1,9 +1,9 @@
-package tn.transit.backend.service;
+package tn.esprit.pidev.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.transit.backend.entity.Trip;
-import tn.transit.backend.repository.TripRepository;
+import tn.esprit.pidev.entity.Trip;
+import tn.esprit.pidev.repository.TripRepository;
 import java.util.List;
 import java.util.Optional;
 

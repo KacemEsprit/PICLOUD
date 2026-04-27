@@ -1,10 +1,10 @@
-package tn.transit.backend.service;
+package tn.esprit.pidev.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.transit.backend.entity.Schedule;
-import tn.transit.backend.entity.enums.DayType;
-import tn.transit.backend.repository.ScheduleRepository;
+import tn.esprit.pidev.entity.Schedule;
+import tn.esprit.pidev.entity.enums.DayType;
+import tn.esprit.pidev.repository.ScheduleRepository;
 import java.util.List;
 import java.util.Optional;
 

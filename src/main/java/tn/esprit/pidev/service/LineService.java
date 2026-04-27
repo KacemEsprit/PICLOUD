@@ -1,11 +1,11 @@
-package tn.transit.backend.service;
+package tn.esprit.pidev.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.transit.backend.entity.Line;
-import tn.transit.backend.entity.enums.LineStatus;
-import tn.transit.backend.entity.enums.TransportMode;
-import tn.transit.backend.repository.LineRepository;
+import tn.esprit.pidev.entity.Line;
+import tn.esprit.pidev.entity.enums.LineStatus;
+import tn.esprit.pidev.entity.enums.TransportMode;
+import tn.esprit.pidev.repository.LineRepository;
 import java.util.List;
 import java.util.Optional;
 
