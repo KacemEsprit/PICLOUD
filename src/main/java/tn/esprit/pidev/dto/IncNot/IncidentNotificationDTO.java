@@ -19,6 +19,11 @@ public class IncidentNotificationDTO {
     @Size(max = 100, message = "Le nom du déclarant ne peut pas dépasser 100 caractères")
     private String reportedByName;
 
+    // AI enrichment fields
+    private Integer estimatedDelayMinutes;
+    private Double confidencePercent;
+    private String incidentType;
+
     public IncidentNotificationDTO() {}
 
     public IncidentNotificationDTO(String title, String severity,
@@ -27,6 +32,19 @@ public class IncidentNotificationDTO {
         this.severity = severity;
         this.location = location;
         this.reportedByName = reportedByName;
+    }
+
+    public IncidentNotificationDTO(String title, String severity,
+                                   String location, String reportedByName,
+                                   Integer estimatedDelayMinutes, Double confidencePercent,
+                                   String incidentType) {
+        this.title = title;
+        this.severity = severity;
+        this.location = location;
+        this.reportedByName = reportedByName;
+        this.estimatedDelayMinutes = estimatedDelayMinutes;
+        this.confidencePercent = confidencePercent;
+        this.incidentType = incidentType;
     }
 
     public String getTitle() { return title; }
@@ -40,4 +58,13 @@ public class IncidentNotificationDTO {
 
     public String getReportedByName() { return reportedByName; }
     public void setReportedByName(String reportedByName) { this.reportedByName = reportedByName; }
+
+    public Integer getEstimatedDelayMinutes() { return estimatedDelayMinutes; }
+    public void setEstimatedDelayMinutes(Integer estimatedDelayMinutes) { this.estimatedDelayMinutes = estimatedDelayMinutes; }
+
+    public Double getConfidencePercent() { return confidencePercent; }
+    public void setConfidencePercent(Double confidencePercent) { this.confidencePercent = confidencePercent; }
+
+    public String getIncidentType() { return incidentType; }
+    public void setIncidentType(String incidentType) { this.incidentType = incidentType; }
 }

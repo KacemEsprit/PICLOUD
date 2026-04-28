@@ -50,13 +50,24 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendInternalNotificationsToAgents(IncidentNotificationDTO dto) {
         List<User> agents = userRepository.findByRole(RoleEnum.AGENT);
         for (User agent : agents) {
+            String details = "Location: " + dto.getLocation() +
+                            " | Severity: " + dto.getSeverity() +
+                            " | Reported by: " + dto.getReportedByName();
+            if (dto.getEstimatedDelayMinutes() != null) {
+                details += " | Est. Delay: " + dto.getEstimatedDelayMinutes() + " min";
+            }
+            if (dto.getConfidencePercent() != null) {
+                details += " | Confidence: " + dto.getConfidencePercent() + "%";
+            }
+            if (dto.getIncidentType() != null) {
+                details += " | Type: " + dto.getIncidentType();
+            }
+
             Notification notification = new Notification(
                     "🚨 New Incident: " + dto.getTitle(),
-                    "Location: " + dto.getLocation() +
-                            " | Severity: " + dto.getSeverity() +
-                            " | Reported by: " + dto.getReportedByName(),
+                    details,
                     NotifStatusEnum.SENT,
-                    agent,                   // ✅ User object not String
+                    agent,
                     LocalDateTime.now()
             );
             notificationRepository.save(notification);
@@ -69,10 +80,20 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendExternalNotificationsToAgents(IncidentNotificationDTO dto) {
         List<User> agents = userRepository.findByRole(RoleEnum.AGENT);
         for (User agent : agents) {
+            // Do not reveal severity to agents via email — send a copy with severity null
+            IncidentNotificationDTO agentDto = new IncidentNotificationDTO(
+                    dto.getTitle(),
+                    null,
+                    dto.getLocation(),
+                    dto.getReportedByName(),
+                    dto.getEstimatedDelayMinutes(),
+                    dto.getConfidencePercent(),
+                    dto.getIncidentType()
+            );
             mailingService.sendIncidentNotificationEmail(
                     agent.getEmail(),
                     agent.getName(),
-                    dto
+                    agentDto
             );
         }
     }
@@ -82,12 +103,18 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendDelayNotificationsToPassengers(IncidentNotificationDTO dto) {
         List<User> passengers = userRepository.findByRole(RoleEnum.PASSENGER);
         for (User passenger : passengers) {
+            String details = "Delay at: " + dto.getLocation() + " | Severity: " + dto.getSeverity();
+            if (dto.getEstimatedDelayMinutes() != null) {
+                details += " | Est. Delay: " + dto.getEstimatedDelayMinutes() + " min";
+            }
+            if (dto.getConfidencePercent() != null) {
+                details += " | Confidence: " + dto.getConfidencePercent() + "%";
+            }
             Notification notification = new Notification(
                     "⚠️ Transport Delay",
-                    "Delay at: " + dto.getLocation() +
-                            " | Severity: " + dto.getSeverity(),
+                    details,
                     NotifStatusEnum.SENT,
-                    passenger,               // ✅ User object not String
+                    passenger,
                     LocalDateTime.now()
             );
             notificationRepository.save(notification);

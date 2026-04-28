@@ -25,13 +25,19 @@ public class IncidentServiceImpl implements IncidentService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private AIIncidentService aiIncidentService;
+
     // ✅ converter — Incident entity → IncidentNotificationDTO
     private IncidentNotificationDTO convertToDTO(Incident incident) {
         return new IncidentNotificationDTO(
                 incident.getTitle(),
                 incident.getSeverity(),
                 incident.getLocation(),
-                incident.getReportedBy() != null ? incident.getReportedBy().getName() : null
+                incident.getReportedBy() != null ? incident.getReportedBy().getName() : null,
+                incident.getEstimatedDelayMinutes(),
+                incident.getConfidencePercent(),
+                incident.getIncidentType()
         );
     }
 
@@ -45,6 +51,26 @@ public class IncidentServiceImpl implements IncidentService {
         }
 
         incident.setReportedBy(agent);
+
+        // Ignore any client-provided severity: AI will determine it
+        incident.setSeverity(null);
+
+        // Enrich incident using AI model (non-blocking fallback)
+        AIIncidentService.AIIncidentAnalysis analysis = null;
+        try {
+            analysis = aiIncidentService.analyzeIncident(incident.getTitle(), incident.getDescription());
+            if (analysis != null) {
+                if (analysis.getSeverity() != null) {
+                    incident.setSeverity(analysis.getSeverity());
+                }
+                try { incident.setEstimatedDelayMinutes(analysis.getEstimatedDelayMinutes()); } catch (Exception ignored) {}
+                try { incident.setConfidencePercent(analysis.getConfidencePercent()); } catch (Exception ignored) {}
+                try { incident.setIncidentType(analysis.getIncidentType()); } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            // Keep original severity if AI fails; do not interrupt flow
+        }
+
         Incident savedIncident = incidentRepository.save(incident);
 
         // ✅ Build DTO with only important fields
@@ -55,12 +81,25 @@ public class IncidentServiceImpl implements IncidentService {
                 agent.getName()
         );
 
-        // ✅ Pass DTO to notification service
+        // Attach AI enrichment to DTO for the frontend
+        if (analysis != null) {
+            try {
+                dto.setEstimatedDelayMinutes(analysis.getEstimatedDelayMinutes());
+            } catch (Exception ignored) {}
+            try {
+                dto.setConfidencePercent(analysis.getConfidencePercent());
+            } catch (Exception ignored) {}
+            try {
+                dto.setIncidentType(analysis.getIncidentType());
+            } catch (Exception ignored) {}
+        }
+
+        // ✅ Pass DTO to notification service (use full dto so passengers receive severity)
         notificationService.sendInternalNotificationsToAgents(dto);
         notificationService.sendExternalNotificationsToAgents(dto);
         notificationService.sendDelayNotificationsToPassengers(dto);
 
-        return dto; // ✅ return DTO not entity
+        return dto; // return full AI result for the create response
     }
 
     @Override

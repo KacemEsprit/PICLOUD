@@ -36,12 +36,31 @@ public class IncidentController {
     }
 
     @GetMapping("/get/{id}")
-    public IncidentNotificationDTO getIncidentById(@PathVariable Long id) {
-        return incidentService.getIncidentById(id);
+    public IncidentNotificationDTO getIncidentById(@PathVariable Long id,
+                                                   Authentication authentication) {
+        IncidentNotificationDTO dto = incidentService.getIncidentById(id);
+        if (dto != null && authentication != null) {
+            boolean isAgent = authentication.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_AGENT".equals(a.getAuthority()));
+            if (isAgent) {
+                dto.setSeverity(null);
+            }
+        }
+        return dto;
     }
 
     @GetMapping
-    public List<IncidentNotificationDTO> getAllIncidents() {
-        return incidentService.getAllIncidents();
+    public List<IncidentNotificationDTO> getAllIncidents(Authentication authentication) {
+        List<IncidentNotificationDTO> list = incidentService.getAllIncidents();
+        if (authentication != null) {
+            boolean isAgent = authentication.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_AGENT".equals(a.getAuthority()));
+            if (isAgent) {
+                for (IncidentNotificationDTO dto : list) {
+                    dto.setSeverity(null);
+                }
+            }
+        }
+        return list;
     }
 }
