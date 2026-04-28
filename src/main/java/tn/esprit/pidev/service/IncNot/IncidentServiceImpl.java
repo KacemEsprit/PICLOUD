@@ -3,6 +3,7 @@ package tn.esprit.pidev.service.IncNot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.pidev.dto.IncNot.IncidentNotificationDTO;
+import tn.esprit.pidev.dto.IncNot.IncidentSubmissionResponseDTO;
 import tn.esprit.pidev.entity.Incident;
 import tn.esprit.pidev.entity.RoleEnum;
 import tn.esprit.pidev.entity.User;
@@ -25,6 +26,9 @@ public class IncidentServiceImpl implements IncidentService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private AIIncidentService aiIncidentService;
+
     // ✅ converter — Incident entity → IncidentNotificationDTO
     private IncidentNotificationDTO convertToDTO(Incident incident) {
         return new IncidentNotificationDTO(
@@ -36,7 +40,7 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Override
-    public IncidentNotificationDTO saveIncident(Incident incident, String agentUsername) {
+    public IncidentSubmissionResponseDTO saveIncident(Incident incident, String agentUsername) {
         User agent = userRepository.findByUsername(agentUsername)
                 .orElseThrow(() -> new InvalidFileException("User not found: " + agentUsername));
 
@@ -46,6 +50,11 @@ public class IncidentServiceImpl implements IncidentService {
 
         incident.setReportedBy(agent);
         Incident savedIncident = incidentRepository.save(incident);
+
+        AIIncidentService.AIIncidentAnalysis analysis = aiIncidentService.analyzeIncident(
+                savedIncident.getTitle(),
+                savedIncident.getDescription()
+        );
 
         // ✅ Build DTO with only important fields
         IncidentNotificationDTO dto = new IncidentNotificationDTO(
@@ -60,7 +69,13 @@ public class IncidentServiceImpl implements IncidentService {
         notificationService.sendExternalNotificationsToAgents(dto);
         notificationService.sendDelayNotificationsToPassengers(dto);
 
-        return dto; // ✅ return DTO not entity
+        return new IncidentSubmissionResponseDTO(
+                savedIncident.getTitle(),
+                savedIncident.getSeverity(),
+                savedIncident.getLocation(),
+                agent.getName(),
+                analysis.getConfidencePercent()
+        );
     }
 
     @Override

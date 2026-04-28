@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.pidev.dto.IncNot.IncidentNotificationDTO;
+import tn.esprit.pidev.dto.IncNot.IncidentSubmissionResponseDTO;
 import tn.esprit.pidev.entity.Incident;
 import tn.esprit.pidev.service.IncNot.IncidentService;
 
@@ -17,15 +18,15 @@ public class IncidentController {
     private IncidentService incidentService;
 
     @PostMapping("/add")
-    public IncidentNotificationDTO createIncident(@RequestBody Incident incident,
-                                                  Authentication authentication) {
+    public IncidentSubmissionResponseDTO createIncident(@RequestBody Incident incident,
+                                                        Authentication authentication) {
         return incidentService.saveIncident(incident, authentication.getName());
     }
 
     @PutMapping("/update/{id}")
-    public IncidentNotificationDTO updateIncident(@PathVariable Long id,
-                                                  @RequestBody Incident incident,
-                                                  Authentication authentication) {
+    public IncidentSubmissionResponseDTO updateIncident(@PathVariable Long id,
+                                                        @RequestBody Incident incident,
+                                                        Authentication authentication) {
         incident.setId(id);
         return incidentService.saveIncident(incident, authentication.getName());
     }
