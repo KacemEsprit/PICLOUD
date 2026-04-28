@@ -1,1 +1,6 @@
+tn\transit\backend\TransitApplicationTests.class
 tn\esprit\pidev\TicketappApplicationTests.class
+tn\esprit\pidev\OrganizationPartnerApplicationTests.class
+tn\esprit\pidev\PidevApplicationTests.class
+tn\esprit\pidev\service\DigitalSignatureServiceTest.class
+tn\esprit\pidev\service\ContractReminderServiceTest.class
