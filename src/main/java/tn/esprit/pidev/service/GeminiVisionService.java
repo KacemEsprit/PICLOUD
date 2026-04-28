@@ -60,7 +60,8 @@ public class GeminiVisionService {
 
         try {
             Map response = webClient.post()
-                    .uri("/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey)                  .header(HttpHeaders.CONTENT_TYPE,
+                    .uri("/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE,
                             MediaType.APPLICATION_JSON_VALUE)
                     .bodyValue(requestBody)
                     .retrieve()
