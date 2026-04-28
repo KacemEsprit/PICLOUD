@@ -64,9 +64,23 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/forget-password").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/health", "/actuator/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
 
                         // Static files served from htdocs (accessible to all)
                         .requestMatchers("/pidev-uploads/**").permitAll()
+
+                        // AI endpoints
+                        .requestMatchers("/api/ai/**").permitAll()
+
+                        // Seed test data endpoint (for testing confidence system)
+                        .requestMatchers("/api/covoiturages/seed-test-confiance").permitAll()
+
+                        // Confidence endpoints (public for testing)
+                        .requestMatchers("/api/covoiturages/confiance/**").permitAll()
+                        .requestMatchers("/api/covoiturages/avis/**").permitAll()
+
+                        // User autocomplete for reservation form
+                        .requestMatchers("/api/users/search-autocomplete").permitAll()
 
                         // ============================================
                         // AUTHENTICATED ENDPOINTS - All authenticated users
@@ -76,6 +90,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/documents/**").authenticated()
                         .requestMatchers("GET", "/api/document-types").authenticated()
                         .requestMatchers("GET", "/api/document-types/**").authenticated()
+
+                        .requestMatchers("/api/reservations/**").authenticated()
+                        .requestMatchers("/api/covoiturages/**").authenticated()
+                        .requestMatchers("GET", "/api/tickets/**").permitAll()
+                        .requestMatchers("/api/tickets/**").authenticated()
 
                         // ============================================
                         // ADMIN ENDPOINTS - ADMIN role only
@@ -90,6 +109,10 @@ public class SecurityConfig {
                         .requestMatchers("POST", "/api/admin/documents/{id}/approve").hasRole("ADMIN")
                         .requestMatchers("POST", "/api/admin/documents/{id}/reject").hasRole("ADMIN")
                         .requestMatchers("POST", "/api/admin/documents/{id}/request-update").hasRole("ADMIN")
+
+                        .requestMatchers("/api/admin/documents/*/approve").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/documents/*/reject").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/documents/*/request-update").hasRole("ADMIN")
 
                         // Admin Document Type Management
                         .requestMatchers("/api/admin/document-types/**").hasRole("ADMIN")
@@ -137,12 +160,15 @@ public class SecurityConfig {
                         .requestMatchers("PUT", "/notifications/**").authenticated()
                         .requestMatchers("DELETE", "/notifications/**").authenticated()
                         .requestMatchers("PATCH", "/notifications/**").authenticated()
-                        
+
                         .requestMatchers("GET", "/incidents").authenticated()
                         .requestMatchers("GET", "/incidents/**").authenticated()
                         .requestMatchers("POST", "/incidents/**").authenticated()
                         .requestMatchers("PUT", "/incidents/**").authenticated()
                         .requestMatchers("DELETE", "/incidents/**").authenticated()
+
+                        .requestMatchers("POST", "/api/documents/**/reupload").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
+                        .requestMatchers("GET", "/api/documents/**/download").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
 
                         // ============================================
                         // DEFAULT - Deny all other requests
@@ -154,3 +180,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
