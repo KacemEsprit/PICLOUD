@@ -22,11 +22,6 @@ public class Incident {
 
     private LocalDateTime createdAt;
 
-    // AI enrichment fields
-    private Integer estimatedDelayMinutes;
-    private Double confidencePercent;
-    private String incidentType;
-
     public Incident() {
         this.createdAt = LocalDateTime.now();
     }
@@ -51,13 +46,4 @@ public class Incident {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public Integer getEstimatedDelayMinutes() { return estimatedDelayMinutes; }
-    public void setEstimatedDelayMinutes(Integer estimatedDelayMinutes) { this.estimatedDelayMinutes = estimatedDelayMinutes; }
-
-    public Double getConfidencePercent() { return confidencePercent; }
-    public void setConfidencePercent(Double confidencePercent) { this.confidencePercent = confidencePercent; }
-
-    public String getIncidentType() { return incidentType; }
-    public void setIncidentType(String incidentType) { this.incidentType = incidentType; }
 }

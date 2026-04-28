@@ -3,6 +3,7 @@ package tn.esprit.pidev.service.IncNot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.pidev.dto.IncNot.IncidentNotificationDTO;
+import tn.esprit.pidev.dto.IncNot.IncidentSubmissionResponseDTO;
 import tn.esprit.pidev.entity.Incident;
 import tn.esprit.pidev.entity.RoleEnum;
 import tn.esprit.pidev.entity.User;
@@ -34,15 +35,12 @@ public class IncidentServiceImpl implements IncidentService {
                 incident.getTitle(),
                 incident.getSeverity(),
                 incident.getLocation(),
-                incident.getReportedBy() != null ? incident.getReportedBy().getName() : null,
-                incident.getEstimatedDelayMinutes(),
-                incident.getConfidencePercent(),
-                incident.getIncidentType()
+                incident.getReportedBy() != null ? incident.getReportedBy().getName() : null
         );
     }
 
     @Override
-    public IncidentNotificationDTO saveIncident(Incident incident, String agentUsername) {
+    public IncidentSubmissionResponseDTO saveIncident(Incident incident, String agentUsername) {
         User agent = userRepository.findByUsername(agentUsername)
                 .orElseThrow(() -> new InvalidFileException("User not found: " + agentUsername));
 
@@ -51,27 +49,12 @@ public class IncidentServiceImpl implements IncidentService {
         }
 
         incident.setReportedBy(agent);
-
-        // Ignore any client-provided severity: AI will determine it
-        incident.setSeverity(null);
-
-        // Enrich incident using AI model (non-blocking fallback)
-        AIIncidentService.AIIncidentAnalysis analysis = null;
-        try {
-            analysis = aiIncidentService.analyzeIncident(incident.getTitle(), incident.getDescription());
-            if (analysis != null) {
-                if (analysis.getSeverity() != null) {
-                    incident.setSeverity(analysis.getSeverity());
-                }
-                try { incident.setEstimatedDelayMinutes(analysis.getEstimatedDelayMinutes()); } catch (Exception ignored) {}
-                try { incident.setConfidencePercent(analysis.getConfidencePercent()); } catch (Exception ignored) {}
-                try { incident.setIncidentType(analysis.getIncidentType()); } catch (Exception ignored) {}
-            }
-        } catch (Exception e) {
-            // Keep original severity if AI fails; do not interrupt flow
-        }
-
         Incident savedIncident = incidentRepository.save(incident);
+
+        AIIncidentService.AIIncidentAnalysis analysis = aiIncidentService.analyzeIncident(
+                savedIncident.getTitle(),
+                savedIncident.getDescription()
+        );
 
         // ✅ Build DTO with only important fields
         IncidentNotificationDTO dto = new IncidentNotificationDTO(
@@ -81,25 +64,18 @@ public class IncidentServiceImpl implements IncidentService {
                 agent.getName()
         );
 
-        // Attach AI enrichment to DTO for the frontend
-        if (analysis != null) {
-            try {
-                dto.setEstimatedDelayMinutes(analysis.getEstimatedDelayMinutes());
-            } catch (Exception ignored) {}
-            try {
-                dto.setConfidencePercent(analysis.getConfidencePercent());
-            } catch (Exception ignored) {}
-            try {
-                dto.setIncidentType(analysis.getIncidentType());
-            } catch (Exception ignored) {}
-        }
-
-        // ✅ Pass DTO to notification service (use full dto so passengers receive severity)
+        // ✅ Pass DTO to notification service
         notificationService.sendInternalNotificationsToAgents(dto);
         notificationService.sendExternalNotificationsToAgents(dto);
         notificationService.sendDelayNotificationsToPassengers(dto);
 
-        return dto; // return full AI result for the create response
+        return new IncidentSubmissionResponseDTO(
+                savedIncident.getTitle(),
+                savedIncident.getSeverity(),
+                savedIncident.getLocation(),
+                agent.getName(),
+                analysis.getConfidencePercent()
+        );
     }
 
     @Override

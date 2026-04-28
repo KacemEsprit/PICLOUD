@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.pidev.dto.IncNot.IncidentNotificationDTO;
+import tn.esprit.pidev.dto.IncNot.IncidentSubmissionResponseDTO;
 import tn.esprit.pidev.entity.Incident;
 import tn.esprit.pidev.service.IncNot.IncidentService;
 
@@ -17,15 +18,15 @@ public class IncidentController {
     private IncidentService incidentService;
 
     @PostMapping("/add")
-    public IncidentNotificationDTO createIncident(@RequestBody Incident incident,
-                                                  Authentication authentication) {
+    public IncidentSubmissionResponseDTO createIncident(@RequestBody Incident incident,
+                                                        Authentication authentication) {
         return incidentService.saveIncident(incident, authentication.getName());
     }
 
     @PutMapping("/update/{id}")
-    public IncidentNotificationDTO updateIncident(@PathVariable Long id,
-                                                  @RequestBody Incident incident,
-                                                  Authentication authentication) {
+    public IncidentSubmissionResponseDTO updateIncident(@PathVariable Long id,
+                                                        @RequestBody Incident incident,
+                                                        Authentication authentication) {
         incident.setId(id);
         return incidentService.saveIncident(incident, authentication.getName());
     }
@@ -36,31 +37,12 @@ public class IncidentController {
     }
 
     @GetMapping("/get/{id}")
-    public IncidentNotificationDTO getIncidentById(@PathVariable Long id,
-                                                   Authentication authentication) {
-        IncidentNotificationDTO dto = incidentService.getIncidentById(id);
-        if (dto != null && authentication != null) {
-            boolean isAgent = authentication.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_AGENT".equals(a.getAuthority()));
-            if (isAgent) {
-                dto.setSeverity(null);
-            }
-        }
-        return dto;
+    public IncidentNotificationDTO getIncidentById(@PathVariable Long id) {
+        return incidentService.getIncidentById(id);
     }
 
     @GetMapping
-    public List<IncidentNotificationDTO> getAllIncidents(Authentication authentication) {
-        List<IncidentNotificationDTO> list = incidentService.getAllIncidents();
-        if (authentication != null) {
-            boolean isAgent = authentication.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_AGENT".equals(a.getAuthority()));
-            if (isAgent) {
-                for (IncidentNotificationDTO dto : list) {
-                    dto.setSeverity(null);
-                }
-            }
-        }
-        return list;
+    public List<IncidentNotificationDTO> getAllIncidents() {
+        return incidentService.getAllIncidents();
     }
 }
