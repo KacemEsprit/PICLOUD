@@ -96,6 +96,12 @@ public class TicketController {
         return "Ticket deleted";
     }
 
+    // SEED — Populate database with test tickets
+    @PostMapping("/seed-data/init")
+    public ResponseEntity<?> seedTestData() {
+        return ResponseEntity.ok(service.seedTestData());
+    }
+
     // ============================================
     // VALIDATION — Contrôle de saisie
     // ============================================

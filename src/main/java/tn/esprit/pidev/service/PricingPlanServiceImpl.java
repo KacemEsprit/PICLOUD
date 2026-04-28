@@ -1,6 +1,11 @@
 package tn.esprit.pidev.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.pidev.dto.PricingPlanRequest;
 import tn.esprit.pidev.dto.PricingPlanResponse;
 import tn.esprit.pidev.entity.PricingPlan;
@@ -16,6 +21,8 @@ import java.util.stream.Collectors;
 @Service
 public class PricingPlanServiceImpl implements IPricingPlanService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PricingPlanServiceImpl.class);
+
     private final PricingPlanRepository planRepo;
     private final UserRepository userRepo;
 
@@ -26,7 +33,8 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
 
     @Override
     public PricingPlanResponse create(PricingPlanRequest request, Long operatorId) {
-        User operator = getOperator(operatorId);
+        validateOperatorRole(operatorId);
+        User operator = getOperatorUser(operatorId);
         PricingPlan plan = new PricingPlan();
         plan.setNom(request.getNom());
         plan.setDescription(request.getDescription());
@@ -38,11 +46,13 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PricingPlanResponse getById(Long id) {
         return PricingPlanResponse.fromEntity(findById(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getAll() {
         return planRepo.findAll().stream()
                 .map(PricingPlanResponse::fromEntity)
@@ -51,7 +61,7 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
 
     @Override
     public PricingPlanResponse update(Long id, PricingPlanRequest request, Long operatorId) {
-        getOperator(operatorId); // vérification du rôle
+        validateOperatorRole(operatorId);
         PricingPlan plan = findById(id);
         plan.setNom(request.getNom());
         plan.setDescription(request.getDescription());
@@ -63,12 +73,13 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
 
     @Override
     public void delete(Long id, Long operatorId) {
-        getOperator(operatorId);
+        validateOperatorRole(operatorId);
         findById(id);
         planRepo.deleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getByType(PricingType type) {
         return planRepo.findByType(type).stream()
                 .map(PricingPlanResponse::fromEntity)
@@ -76,6 +87,7 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getByMaxPrice(Double maxPrix) {
         return planRepo.findByPrixLessThanEqual(maxPrix).stream()
                 .map(PricingPlanResponse::fromEntity)
@@ -83,24 +95,57 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getByOperator(Long operatorId) {
-        return planRepo.findByCreatedById(operatorId).stream()
+        logger.info("Fetching pricing plans for operator: {}", operatorId);
+        List<PricingPlanResponse> plans = planRepo.findByCreatedById(operatorId).stream()
                 .map(PricingPlanResponse::fromEntity)
                 .collect(Collectors.toList());
+        logger.info("Found {} pricing plans for operator {}", plans.size(), operatorId);
+        return plans;
     }
 
     // ===== Helpers =====
+
     private PricingPlan findById(Long id) {
         return planRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("PricingPlan introuvable : " + id));
+                .orElseThrow(() -> {
+                    logger.warn("PricingPlan not found: {}", id);
+                    return new RuntimeException("PricingPlan introuvable : " + id);
+                });
     }
 
-    private User getOperator(Long operatorId) {
+    /**
+     * Validates that the user calling this operation has OPERATOR or ADMIN role.
+     * Returns the operator user if valid, otherwise throws an exception.
+     */
+    private void validateOperatorRole(Long operatorId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null ? auth.getName() : "UNKNOWN";
+
+        logger.debug("Validating operator role for user: {} on operatorId: {}", username, operatorId);
+
         User user = userRepo.findById(operatorId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable : " + operatorId));
+                .orElseThrow(() -> {
+                    logger.error("User not found: {} (attempt by: {})", operatorId, username);
+                    return new RuntimeException("Utilisateur introuvable : " + operatorId);
+                });
+
         if (user.getRole() != RoleEnum.OPERATOR && user.getRole() != RoleEnum.ADMIN) {
-            throw new RuntimeException("Accès refusé : seuls les OPERATOR et ADMIN peuvent gérer les plans.");
+            logger.error("Access denied: User {} tried to manage plans for user {}, but {} has role {}",
+                    username, operatorId, user.getUsername(), user.getRole());
+            throw new RuntimeException("Accès refusé : seuls les OPERATOR et ADMIN peuvent gérer les plans (user has role: " + user.getRole() + ")");
         }
-        return user;
+
+        logger.info("Operator role validation passed for user: {} with operatorId: {}", username, operatorId);
+    }
+
+    private User getOperatorUser(Long operatorId) {
+        return userRepo.findById(operatorId)
+                .orElseThrow(() -> {
+                    logger.error("Operator user not found: {}", operatorId);
+                    return new RuntimeException("Utilisateur introuvable : " + operatorId);
+                });
     }
 }
+

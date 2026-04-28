@@ -7,6 +7,7 @@ import tn.esprit.pidev.entity.*;
 import tn.esprit.pidev.repository.LoyaltyAccountRepository;
 import tn.esprit.pidev.repository.PointTransactionRepository;
 import tn.esprit.pidev.repository.ReductionRepository;
+import tn.esprit.pidev.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,13 +19,16 @@ public class LoyaltyAccountServiceImpl implements ILoyaltyAccountService {
     private final LoyaltyAccountRepository loyaltyRepo;
     private final PointTransactionRepository txRepo;
     private final ReductionRepository reductionRepo;
+    private final UserRepository userRepo;
 
     public LoyaltyAccountServiceImpl(LoyaltyAccountRepository loyaltyRepo,
                                      PointTransactionRepository txRepo,
-                                     ReductionRepository reductionRepo) {
+                                     ReductionRepository reductionRepo,
+                                     UserRepository userRepo) {
         this.loyaltyRepo = loyaltyRepo;
         this.txRepo = txRepo;
         this.reductionRepo = reductionRepo;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -35,7 +39,11 @@ public class LoyaltyAccountServiceImpl implements ILoyaltyAccountService {
     @Override
     public LoyaltyAccountResponse getByPassenger(Long passengerId) {
         LoyaltyAccount la = loyaltyRepo.findByPassengerId(passengerId)
-                .orElseThrow(() -> new RuntimeException("Compte fidélité introuvable pour le passager : " + passengerId));
+                .orElseGet(() -> {
+                    User passenger = userRepo.findById(passengerId)
+                            .orElseThrow(() -> new RuntimeException("Utilisateur introuvable : " + passengerId));
+                    return loyaltyRepo.save(new LoyaltyAccount(passenger));
+                });
         return LoyaltyAccountResponse.fromEntity(la);
     }
 

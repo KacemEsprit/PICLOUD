@@ -44,9 +44,7 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
         PricingPlan plan = planRepo.findById(request.getPricingPlanId())
                 .orElseThrow(() -> new RuntimeException("Plan introuvable : " + request.getPricingPlanId()));
 
-        // Vérifier si le passenger a déjà un abonnement actif
-        subscriptionRepo.findByPassengerIdAndStatut(passengerId, SubscriptionStatus.ACTIVE)
-                .ifPresent(s -> { throw new RuntimeException("Vous avez déjà un abonnement actif."); });
+        // Multiple active subscriptions are allowed by current product flow.
 
         // Appliquer réduction si code fourni
         double prixFinal = plan.getPrix();

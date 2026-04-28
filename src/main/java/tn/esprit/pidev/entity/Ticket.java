@@ -1,6 +1,7 @@
 package tn.esprit.pidev.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 public class Ticket {
@@ -19,6 +20,7 @@ public class Ticket {
 
     private int quantiteDisponible;
 
+    @JsonProperty("disponible")
     private boolean disponible = true;
 
     private String lieuDepart;
@@ -34,6 +36,7 @@ public class Ticket {
     public String getValidity() { return validity; }
     public TransportType getTransportType() { return transportType; }
     public int getQuantiteDisponible() { return quantiteDisponible; }
+    @JsonProperty("disponible")
     public boolean isDisponible() { return disponible; }
     public String getLieuDepart() { return lieuDepart; }
     public String getDestination() { return destination; }

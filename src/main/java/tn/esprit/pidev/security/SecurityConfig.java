@@ -82,10 +82,88 @@ public class SecurityConfig {
                         // User autocomplete for reservation form
                         .requestMatchers("/api/users/search-autocomplete").permitAll()
 
+                        // Seed test data endpoint
+                        .requestMatchers("/api/tickets/seed-data/**").permitAll()
+
                         // ============================================
                         // AUTHENTICATED ENDPOINTS - All authenticated users
                         // ============================================
                         .requestMatchers("/api/auth/refresh").authenticated()
+
+                        // Organizations - Allow any authenticated user
+                        .requestMatchers("/api/organizations/**").authenticated()
+                        .requestMatchers("GET", "/api/organizations").authenticated()
+                        .requestMatchers("POST", "/api/organizations").authenticated()
+                        .requestMatchers("PUT", "/api/organizations/**").authenticated()
+                        .requestMatchers("DELETE", "/api/organizations/**").authenticated()
+
+                        // Partners - Allow any authenticated user
+                        .requestMatchers("/api/partners/**").authenticated()
+                        .requestMatchers("GET", "/api/partners").authenticated()
+                        .requestMatchers("POST", "/api/partners").authenticated()
+                        .requestMatchers("PUT", "/api/partners/**").authenticated()
+                        .requestMatchers("DELETE", "/api/partners/**").authenticated()
+
+                        // Contracts - Allow any authenticated user
+                        .requestMatchers("/api/contracts/**").authenticated()
+                        .requestMatchers("GET", "/api/contracts").authenticated()
+                        .requestMatchers("POST", "/api/contracts").authenticated()
+                        .requestMatchers("PUT", "/api/contracts/**").authenticated()
+                        .requestMatchers("DELETE", "/api/contracts/**").authenticated()
+
+                        .requestMatchers("/api/contracts/reminders/**").authenticated()
+                        .requestMatchers("GET", "/api/contracts/reminders/expiring").authenticated()
+                        .requestMatchers("POST", "/api/contracts/reminders/trigger").authenticated()
+
+                        // Pricing Plans - Allow any authenticated user
+                        .requestMatchers("/api/pricing-plans/**").authenticated()
+                        .requestMatchers("GET", "/api/pricing-plans").authenticated()
+                        .requestMatchers("POST", "/api/pricing-plans/**").authenticated()
+                        .requestMatchers("PUT", "/api/pricing-plans/**").authenticated()
+                        .requestMatchers("DELETE", "/api/pricing-plans/**").authenticated()
+                        .requestMatchers("GET", "/api/pricing-plans/**").authenticated()
+
+                        // Reductions - Allow authenticated users
+                        .requestMatchers("/api/reductions/**").authenticated()
+                        .requestMatchers("GET", "/api/reductions").authenticated()
+                        .requestMatchers("POST", "/api/reductions/**").authenticated()
+                        .requestMatchers("PUT", "/api/reductions/**").authenticated()
+                        .requestMatchers("DELETE", "/api/reductions/**").authenticated()
+                        .requestMatchers("GET", "/api/reductions/**").authenticated()
+
+                        // Subscriptions - Allow authenticated users
+                        .requestMatchers("/api/subscriptions/**").authenticated()
+                        .requestMatchers("GET", "/api/subscriptions").authenticated()
+                        .requestMatchers("POST", "/api/subscriptions/**").authenticated()
+                        .requestMatchers("PUT", "/api/subscriptions/**").authenticated()
+                        .requestMatchers("DELETE", "/api/subscriptions/**").authenticated()
+                        .requestMatchers("GET", "/api/subscriptions/**").authenticated()
+
+                        // Payment - Allow authenticated users
+                        .requestMatchers("/api/payment/**").authenticated()
+                        .requestMatchers("GET", "/api/payment/**").authenticated()
+                        .requestMatchers("POST", "/api/payment/**").authenticated()
+
+                        // Loyalty Accounts - Allow authenticated users
+                        .requestMatchers("/api/loyalty-accounts/**").authenticated()
+                        .requestMatchers("GET", "/api/loyalty-accounts").authenticated()
+                        .requestMatchers("GET", "/api/loyalty-accounts/**").authenticated()
+                        .requestMatchers("POST", "/api/loyalty-accounts/**").authenticated()
+                        .requestMatchers("DELETE", "/api/loyalty-accounts/**").authenticated()
+
+                        // Point Transactions - Allow authenticated users
+                        .requestMatchers("/api/point-transactions/**").authenticated()
+                        .requestMatchers("GET", "/api/point-transactions").authenticated()
+                        .requestMatchers("GET", "/api/point-transactions/**").authenticated()
+
+                        // Reports - Allow authenticated users (admins/operators can trigger)
+                        .requestMatchers("/api/reports/**").authenticated()
+                        .requestMatchers("POST", "/api/reports/trigger-weekly").authenticated()
+                        .requestMatchers("POST", "/api/reports/trigger-expiration-alert").authenticated()
+
+                        // ML Services - Allow authenticated users
+                        .requestMatchers("/api/ml/**").authenticated()
+                        .requestMatchers("GET", "/api/ml/**").authenticated()
                         .requestMatchers("/api/profile/**").authenticated()
                         .requestMatchers("/api/documents/**").authenticated()
                         .requestMatchers("GET", "/api/document-types").authenticated()
@@ -94,7 +172,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/reservations/**").authenticated()
                         .requestMatchers("/api/covoiturages/**").authenticated()
                         .requestMatchers("GET", "/api/tickets/**").permitAll()
-                        .requestMatchers("/api/tickets/**").authenticated()
+                        .requestMatchers("POST", "/api/tickets/**").authenticated()
+                        .requestMatchers("PUT", "/api/tickets/**").authenticated()
+                        .requestMatchers("DELETE", "/api/tickets/**").authenticated()
 
                         // ============================================
                         // ADMIN ENDPOINTS - ADMIN role only
@@ -167,8 +247,6 @@ public class SecurityConfig {
                         .requestMatchers("PUT", "/incidents/**").authenticated()
                         .requestMatchers("DELETE", "/incidents/**").authenticated()
 
-                        .requestMatchers("POST", "/api/documents/**/reupload").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
-                        .requestMatchers("GET", "/api/documents/**/download").hasAnyRole("AGENT", "OPERATOR", "PASSENGER")
 
                         // ============================================
                         // DEFAULT - Deny all other requests

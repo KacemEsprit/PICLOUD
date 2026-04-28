@@ -5,6 +5,8 @@ import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tn.esprit.pidev.dto.PaymentInitRequest;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 
 @Service
 public class StripePaymentServiceImpl implements IStripePaymentService {
+    private static final Logger logger = LoggerFactory.getLogger(StripePaymentServiceImpl.class);
 
     @Value("${stripe.secret-key}")
     private String secretKey;
@@ -55,6 +58,9 @@ public class StripePaymentServiceImpl implements IStripePaymentService {
 
     @PostConstruct
     public void init() {
+        if (secretKey == null || secretKey.isBlank() || !secretKey.startsWith("sk_")) {
+            logger.error("Stripe secret key is missing or invalid. Expected key starting with 'sk_'.");
+        }
         Stripe.apiKey = secretKey;
     }
 
@@ -122,7 +128,7 @@ public class StripePaymentServiceImpl implements IStripePaymentService {
             return response;
 
         } catch (Exception e) {
-            throw new RuntimeException("Erreur Stripe : " + e.getMessage());
+            throw new RuntimeException("Erreur Stripe (verify secret key and Stripe configuration): " + e.getMessage());
         }
     }
 
