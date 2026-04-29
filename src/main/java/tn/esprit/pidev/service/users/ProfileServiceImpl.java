@@ -49,31 +49,61 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * Update the current authenticated user's profile
-     * Only allows updating: email, name, cin
+     * Allows updating: email, name, cin
+     * Cannot update username - would invalidate JWT token
      */
     @Override
     @Transactional
     public ProfileResponse updateCurrentUserProfile(ProfileUpdateRequest request) {
         logger.info("Updating current user's profile");
+
+        if (request == null) {
+            throw new InvalidFileException("Profile update request cannot be null");
+        }
+
         User user = getCurrentUser();
 
+        // Store the original username to ensure it's never lost during update
+        String originalUsername = user.getUsername();
+
+        if (originalUsername == null || originalUsername.isEmpty()) {
+            throw new InvalidFileException("Critical error: user has no valid username");
+        }
+
         // Check if email is being changed and is already taken by another user
-        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                throw new InvalidFileException("Email already exists: " + request.getEmail());
+        String newEmail = request.getEmail();
+        if (newEmail != null && !newEmail.trim().isEmpty()) {
+            newEmail = newEmail.trim();
+            if (!newEmail.equals(user.getEmail())) {
+                if (userRepository.existsByEmail(newEmail)) {
+                    throw new InvalidFileException("Email already exists: " + newEmail);
+                }
+                user.setEmail(newEmail);
             }
-            user.setEmail(request.getEmail());
+        } else if (request.getEmail() != null) {
+            // If email field was explicitly provided but is empty, throw error
+            throw new InvalidFileException("Email cannot be empty");
         }
 
         // Update name
-        if (request.getName() != null && !request.getName().trim().isEmpty()) {
-            user.setName(request.getName());
+        String newName = request.getName();
+        if (newName != null) {
+            newName = newName.trim();
+            if (!newName.isEmpty()) {
+                user.setName(newName);
+            } else {
+                throw new InvalidFileException("Name cannot be empty");
+            }
         }
 
         // Update CIN
         if (request.getCin() != null) {
             user.setCin(request.getCin());
         }
+
+        // CRITICAL: Ensure username is never modified - this could invalidate JWT tokens
+        // Re-set it explicitly to prevent any accidental modification
+        user.setUsername(originalUsername);
 
         User updatedUser = userRepository.save(user);
         logger.info("Profile updated successfully for user: " + user.getId());
@@ -88,6 +118,9 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileResponse uploadProfilePhoto(MultipartFile file) {
         logger.info("Uploading profile photo for current user");
         User user = getCurrentUser();
+
+        // Store the original username to ensure it's never lost during update
+        String originalUsername = user.getUsername();
 
         if (file.isEmpty()) {
             throw new InvalidFileException("File is empty");
@@ -122,6 +155,10 @@ public class ProfileServiceImpl implements ProfileService {
             // Save path and content type to database (not the file bytes)
             user.setPhoto(relativePhotoPath.getBytes());
             user.setPhotoContentType(contentType);
+
+            // CRITICAL: Ensure username is never modified - this could invalidate JWT tokens
+            user.setUsername(originalUsername);
+
             User updatedUser = userRepository.save(user);
             logger.info("Profile photo uploaded successfully for user: {} at path: {} (htdocs)", user.getId(), relativePhotoPath);
             return convertToProfileResponse(updatedUser);
@@ -162,6 +199,9 @@ public class ProfileServiceImpl implements ProfileService {
         logger.info("Deleting profile photo for current user");
         User user = getCurrentUser();
 
+        // Store the original username to ensure it's never lost during update
+        String originalUsername = user.getUsername();
+
         if (user.getPhoto() != null) {
             try {
                 // Delete file from file system
@@ -174,6 +214,10 @@ public class ProfileServiceImpl implements ProfileService {
 
         user.setPhoto(null);
         user.setPhotoContentType(null);
+
+        // CRITICAL: Ensure username is never modified - this could invalidate JWT tokens
+        user.setUsername(originalUsername);
+
         User updatedUser = userRepository.save(user);
         logger.info("Profile photo deleted successfully for user: {}", user.getId());
         return convertToProfileResponse(updatedUser);

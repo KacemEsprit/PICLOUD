@@ -179,10 +179,12 @@ public class SecurityConfig {
                         // ============================================
                         // ADMIN ENDPOINTS - ADMIN role only
                         // ============================================
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Admin User Management - Allow any authenticated user to get/update their own profile (MUST come before generic /admin/* matcher)
+                        .requestMatchers("GET", "/api/admin/users/me").authenticated()
+                        .requestMatchers("PUT", "/api/admin/users/**").authenticated()
 
-                        // Admin User Management
-                        .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                        // Generic admin endpoints - require ADMIN role
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Admin Document Management
                         .requestMatchers("/api/admin/documents/**").hasRole("ADMIN")
