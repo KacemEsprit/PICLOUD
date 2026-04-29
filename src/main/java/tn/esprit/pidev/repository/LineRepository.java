@@ -1,10 +1,10 @@
-package tn.transit.backend.repository;
+package tn.esprit.pidev.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import tn.transit.backend.entity.Line;
-import tn.transit.backend.entity.enums.LineStatus;
-import tn.transit.backend.entity.enums.TransportMode;
+import tn.esprit.pidev.entity.Line;
+import tn.esprit.pidev.entity.enums.LineStatus;
+import tn.esprit.pidev.entity.enums.TransportMode;
 import java.util.List;
 
 @Repository

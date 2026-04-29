@@ -1,13 +1,13 @@
-package tn.transit.backend.repository;
+package tn.esprit.pidev.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import tn.transit.backend.entity.Driver;
-import tn.transit.backend.entity.enums.DriverStatus;
-import tn.transit.backend.entity.enums.LicenseType;
-import tn.transit.backend.entity.enums.LicenseValidationStatus;
+import tn.esprit.pidev.entity.Driver;
+import tn.esprit.pidev.entity.enums.DriverStatus;
+import tn.esprit.pidev.entity.enums.LicenseType;
+import tn.esprit.pidev.entity.enums.LicenseValidationStatus;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

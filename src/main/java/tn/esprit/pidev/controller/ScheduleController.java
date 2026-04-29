@@ -1,10 +1,10 @@
-package tn.transit.backend.controller;
+package tn.esprit.pidev.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.transit.backend.entity.Schedule;
-import tn.transit.backend.service.ScheduleService;
+import tn.esprit.pidev.entity.Schedule;
+import tn.esprit.pidev.service.ScheduleService;
 import java.util.List;
 
 @RestController

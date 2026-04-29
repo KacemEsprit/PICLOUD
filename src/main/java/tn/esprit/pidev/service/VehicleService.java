@@ -1,11 +1,11 @@
-package tn.transit.backend.service;
+package tn.esprit.pidev.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.transit.backend.entity.Vehicle;
-import tn.transit.backend.entity.enums.VehicleStatus;
-import tn.transit.backend.entity.enums.VehicleType;
-import tn.transit.backend.repository.VehicleRepository;
+import tn.esprit.pidev.entity.Vehicle;
+import tn.esprit.pidev.entity.enums.VehicleStatus;
+import tn.esprit.pidev.entity.enums.VehicleType;
+import tn.esprit.pidev.repository.VehicleRepository;
 import java.util.List;
 import java.util.Optional;
 

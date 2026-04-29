@@ -1,10 +1,10 @@
-package tn.transit.backend.controller;
+package tn.esprit.pidev.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.transit.backend.entity.Driver;
-import tn.transit.backend.service.DriverService;
+import tn.esprit.pidev.entity.Driver;
+import tn.esprit.pidev.service.DriverService;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
-import tn.transit.backend.service.LicenseValidationService;
+import tn.esprit.pidev.service.LicenseValidationService;
 
 import java.io.IOException;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package tn.transit.backend.config;
+package tn.esprit.pidev.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

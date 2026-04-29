@@ -1,4 +1,4 @@
-package tn.transit.backend.entity;
+package tn.esprit.pidev.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;

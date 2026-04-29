@@ -1,4 +1,4 @@
-package tn.transit.backend.config;
+package tn.esprit.pidev.config;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Controller;

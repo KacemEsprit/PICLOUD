@@ -1,10 +1,10 @@
-package tn.transit.backend.entity;
+package tn.esprit.pidev.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-import tn.transit.backend.entity.enums.LineStatus;
-import tn.transit.backend.entity.enums.TransportMode;
+import tn.esprit.pidev.entity.enums.LineStatus;
+import tn.esprit.pidev.entity.enums.TransportMode;
 import java.util.List;
 
 @Entity
