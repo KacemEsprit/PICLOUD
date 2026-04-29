@@ -417,6 +417,85 @@ public class EmailService {
                 "</body>\n" +
                 "</html>";
     }
+
+    public void sendActionPromoEmail(String toEmail, String passengerName,
+                                     String promoCode, double discountPct,
+                                     String actionMessage, LocalDate expiryDate) {
+        String subject = "TransitTN — An exclusive offer just for you 🎁";
+        String body = baseLayout(
+                "Your personal promo code",
+                passengerName,
+                "<p>" + actionMessage + "</p>"
+                        + "<p>As a valued member of TransitTN, we are pleased to offer you an exclusive discount:</p>"
+
+                        // Big promo code display
+                        + "<div style='text-align:center;margin:24px 0'>"
+                        + "  <div style='display:inline-block;background:#e3f2fd;border:2px dashed #1a73e8;"
+                        + "       border-radius:12px;padding:16px 32px'>"
+                        + "    <div style='font-size:0.8rem;color:#555;margin-bottom:6px;letter-spacing:1px'>YOUR PROMO CODE</div>"
+                        + "    <div style='font-size:2rem;font-weight:700;font-family:monospace;color:#1a237e;letter-spacing:4px'>"
+                        +        promoCode
+                        + "    </div>"
+                        + "    <div style='font-size:1.1rem;font-weight:600;color:#2e7d32;margin-top:8px'>-" + (int) discountPct + "% discount</div>"
+                        + "  </div>"
+                        + "</div>"
+
+                        + "<div style='background:#fff8e1;border-radius:8px;padding:12px 16px;margin-bottom:16px'>"
+                        + "  <i>⏰ Valid until <strong>" + expiryDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "</strong> "
+                        + "  (7 days only)</i>"
+                        + "</div>"
+
+                        + "<p>Apply this code when subscribing to any available plan:</p>"
+                        + "<a href='" + frontendUrl + "/passenger/plans' class='btn'>Browse plans &amp; subscribe</a>"
+
+                        + "<p style='margin-top:20px;font-size:0.8rem;color:#999'>"
+                        + "This code was generated exclusively for your account and can only be used once.</p>"
+        );
+        send(toEmail, subject, body);
+    }
+    public void sendAutoRenewalEnabledEmail(String toEmail, String passengerName,
+                                            String planName, LocalDate dateFin) {
+        String subject = "TransitTN — Auto-renewal enabled";
+        String body = baseLayout(
+                "Auto-renewal enabled",
+                passengerName,
+                "<p>Auto-renewal has been <strong>enabled</strong> for your <strong>" + planName + "</strong> plan.</p>"
+                        + "<p>Your subscription will be automatically renewed on <strong>" + dateFin.format(FMT) + "</strong>.</p>"
+                        + "<p>You will receive reminder emails 7 days and 1 day before the renewal date.</p>"
+                        + "<a href='" + frontendUrl + "/passenger/subscriptions' class='btn'>Manage my subscriptions</a>"
+        );
+        send(toEmail, subject, body);
+    }
+    public void sendAutoRenewalActivatedEmail(String toEmail, String passengerName,
+                                              String planName, LocalDate dateFin) {
+        String subject = "TransitTN — Auto-renewal activated for your subscription";
+        String body = baseLayout(
+                "Auto-renewal activated",
+                passengerName,
+                "<p>Your subscription to the <strong>" + planName + "</strong> plan is now active.</p>"
+                        + "<p>You have enabled <strong>auto-renewal</strong>. Your subscription will be automatically "
+                        + "renewed on <strong>" + dateFin.format(FMT) + "</strong>.</p>"
+                        + "<p>You will receive reminder emails 7 days and 1 day before the renewal date.</p>"
+                        + "<p>To disable auto-renewal at any time, visit your subscriptions page:</p>"
+                        + "<a href='" + frontendUrl + "/passenger/subscriptions' class='btn'>Manage my subscriptions</a>"
+        );
+        send(toEmail, subject, body);
+    }
+    // ── 3. Email when auto-renewal is toggled OFF from the subscriptions list ──
+    public void sendAutoRenewalDisabledEmail(String toEmail, String passengerName,
+                                             String planName, LocalDate dateFin) {
+        String subject = "TransitTN — Auto-renewal disabled";
+        String body = baseLayout(
+                "Auto-renewal disabled",
+                passengerName,
+                "<p>Auto-renewal has been <strong>disabled</strong> for your <strong>" + planName + "</strong> plan.</p>"
+                        + "<p>Your subscription will expire on <strong>" + dateFin.format(FMT) + "</strong> "
+                        + "and will <strong>not</strong> be renewed automatically.</p>"
+                        + "<p>You can re-enable it at any time from your subscriptions page:</p>"
+                        + "<a href='" + frontendUrl + "/passenger/subscriptions' class='btn'>Manage my subscriptions</a>"
+        );
+        send(toEmail, subject, body);
+    }
 }
 
 

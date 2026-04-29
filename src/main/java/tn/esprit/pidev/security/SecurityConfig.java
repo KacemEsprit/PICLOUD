@@ -168,7 +168,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/documents/**").authenticated()
                         .requestMatchers("GET", "/api/document-types").authenticated()
                         .requestMatchers("GET", "/api/document-types/**").authenticated()
-
+                      //  .requestMatchers("/api/zones/**").hasRole("ADMIN")
+                        .requestMatchers("/api/zones/**").authenticated()
                         .requestMatchers("/api/reservations/**").authenticated()
                         .requestMatchers("/api/covoiturages/**").authenticated()
                         .requestMatchers("GET", "/api/tickets/**").permitAll()
