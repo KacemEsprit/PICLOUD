@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/reductions")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Tag(name = "Reduction", description = "Gestion des réductions — réservé aux OPERATOR")
 public class ReductionController {
 

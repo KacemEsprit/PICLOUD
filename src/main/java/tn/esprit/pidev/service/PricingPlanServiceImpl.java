@@ -27,13 +27,38 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
     @Override
     public PricingPlanResponse create(PricingPlanRequest request, Long operatorId) {
         User operator = getOperator(operatorId);
+
+        String trimmedName = request.getNom() == null ? "" : request.getNom().trim();
+        if (trimmedName.isEmpty()) {
+            throw new RuntimeException("Plan name is required.");
+        }
+        boolean nameExists = planRepo.findAll().stream()
+                .anyMatch(p -> p.getNom().trim().equalsIgnoreCase(trimmedName));
+        if (nameExists) {
+            throw new RuntimeException("A pricing plan with the name \"" + trimmedName + "\" already exists.");
+        }
+
+        Integer dureeEnJours = request.getDureeEnJours();
+        if (dureeEnJours == null || dureeEnJours <= 0) {
+            throw new RuntimeException("Plan duration (in days) is required and must be greater than 0.");
+        }
+        if (request.getPrix() == null || request.getPrix() < 0) {
+            throw new RuntimeException("Plan price is required and must be >= 0.");
+        }
+        if (request.getType() == null) {
+            throw new RuntimeException("Plan type is required (FREE, BASIC or PREMIUM).");
+        }
+
         PricingPlan plan = new PricingPlan();
-        plan.setNom(request.getNom());
+        plan.setNom(trimmedName);
         plan.setDescription(request.getDescription());
         plan.setPrix(request.getPrix());
-        plan.setDureeEnMois(request.getDureeEnMois());
+        plan.setDureeEnJours(dureeEnJours);
         plan.setType(request.getType());
         plan.setCreatedBy(operator);
+        // ── FIX : inherit transportType from the operator ──
+        plan.setTransportType(operator.getTransportType());
+
         return PricingPlanResponse.fromEntity(planRepo.save(plan));
     }
 
@@ -51,13 +76,38 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
 
     @Override
     public PricingPlanResponse update(Long id, PricingPlanRequest request, Long operatorId) {
-        getOperator(operatorId); // vérification du rôle
+        // ── FIX : keep operator reference to set transportType ──
+        User operator = getOperator(operatorId);
+
+        String trimmedName = request.getNom() == null ? "" : request.getNom().trim();
+        if (trimmedName.isEmpty()) {
+            throw new RuntimeException("Plan name is required.");
+        }
+
+        boolean nameExists = planRepo.findAll().stream()
+                .anyMatch(p -> !p.getId().equals(id)
+                        && p.getNom().trim().equalsIgnoreCase(trimmedName));
+        if (nameExists) {
+            throw new RuntimeException("A pricing plan with the name \"" + trimmedName + "\" already exists.");
+        }
+
+        Integer dureeEnJours = request.getDureeEnJours();
+        if (dureeEnJours == null || dureeEnJours <= 0) {
+            throw new RuntimeException("Plan duration (in days) is required and must be greater than 0.");
+        }
+        if (request.getPrix() == null || request.getPrix() < 0) {
+            throw new RuntimeException("Plan price is required and must be >= 0.");
+        }
+
         PricingPlan plan = findById(id);
-        plan.setNom(request.getNom());
+        plan.setNom(trimmedName);
         plan.setDescription(request.getDescription());
         plan.setPrix(request.getPrix());
-        plan.setDureeEnMois(request.getDureeEnMois());
+        plan.setDureeEnJours(dureeEnJours);
         plan.setType(request.getType());
+        // ── FIX : inherit transportType from the operator ──
+        plan.setTransportType(operator.getTransportType());
+
         return PricingPlanResponse.fromEntity(planRepo.save(plan));
     }
 
@@ -89,17 +139,18 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
                 .collect(Collectors.toList());
     }
 
-    // ===== Helpers =====
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
     private PricingPlan findById(Long id) {
         return planRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("PricingPlan introuvable : " + id));
+                .orElseThrow(() -> new RuntimeException("Pricing plan not found: " + id));
     }
 
     private User getOperator(Long operatorId) {
         User user = userRepo.findById(operatorId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable : " + operatorId));
+                .orElseThrow(() -> new RuntimeException("User not found: " + operatorId));
         if (user.getRole() != RoleEnum.OPERATOR && user.getRole() != RoleEnum.ADMIN) {
-            throw new RuntimeException("Accès refusé : seuls les OPERATOR et ADMIN peuvent gérer les plans.");
+            throw new RuntimeException("Access denied: only OPERATOR and ADMIN can manage pricing plans.");
         }
         return user;
     }

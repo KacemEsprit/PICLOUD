@@ -26,6 +26,10 @@ public class User {
     @Column(nullable = false)
     private RoleEnum role;        // new field, must be non-null
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transport_type")
+    private TransportType transportType; // null pour ADMIN, AGENT, PASSENGER
+
     @Column(unique = true)
     private Long cin;             // new field, often unique
 
@@ -64,6 +68,14 @@ public class User {
         this.email = email;
         this.name = name;
         this.role = role;
+    }
+
+    // Constructor for OPERATOR with transport type
+    public User(String username, String password, String email, String name, RoleEnum role, TransportType transportType) {
+        this(username, password, email, name, role);
+        if (role == RoleEnum.OPERATOR) {
+            this.transportType = transportType;
+        }
     }
 
     // Getters and Setters
@@ -131,6 +143,19 @@ public class User {
 
     public void setRole(RoleEnum role) {
         this.role = role;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public TransportType getTransportType() {
+        return transportType;
+    }
+
+    public void setTransportType(TransportType transportType) {
+        // Only OPERATOR role can have transport_type attribute
+        if (this.role != RoleEnum.OPERATOR && transportType != null) {
+            throw new IllegalArgumentException("Transport type can only be set for OPERATOR role");
+        }
+        this.transportType = transportType;
         this.updatedAt = LocalDateTime.now();
     }
 

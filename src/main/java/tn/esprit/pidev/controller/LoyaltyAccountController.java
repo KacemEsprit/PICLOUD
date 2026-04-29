@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/loyalty-accounts")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Tag(name = "Loyalty Account", description = "Programme de fidélité des passagers")
 public class LoyaltyAccountController {
 

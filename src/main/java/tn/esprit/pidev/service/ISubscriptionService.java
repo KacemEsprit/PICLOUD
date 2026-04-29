@@ -10,8 +10,10 @@ public interface ISubscriptionService {
     SubscriptionResponse subscribe(SubscriptionRequest request, Long passengerId);
     SubscriptionResponse getById(Long id);
     List<SubscriptionResponse> getAll();
+    List<SubscriptionResponse> getByOperator(Long operatorId);
     List<SubscriptionResponse> getByPassenger(Long passengerId);
     List<SubscriptionResponse> getByStatut(SubscriptionStatus statut);
     SubscriptionResponse cancel(Long id, Long passengerId);
+    SubscriptionResponse updateAutoRenewal(Long id, Long passengerId, boolean autoRenewal);
     void delete(Long id);
 }

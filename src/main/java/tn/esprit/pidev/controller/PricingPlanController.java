@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/pricing-plans")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Tag(name = "Pricing Plan", description = "Gestion des plans tarifaires — réservé aux OPERATOR")
 public class PricingPlanController {
 

@@ -85,6 +85,7 @@ public class UserServiceImpl implements UserService {
         logger.info("Name: " + request.getName());
         logger.info("Role: " + request.getRole());
         logger.info("Password: " + (request.getPassword() != null ? "***" : "null"));
+        logger.info("TransportType: " + request.getTransportType());
         logger.info("=================================");
 
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -99,6 +100,13 @@ public class UserServiceImpl implements UserService {
             throw new InvalidFileException("Name is required and cannot be empty");
         }
 
+        // Validate that OPERATOR must have transportType, others must have null
+        if (request.getRole() == RoleEnum.OPERATOR) {
+            if (request.getTransportType() == null) {
+                throw new InvalidFileException("TransportType is required for OPERATOR role");
+            }
+        }
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -106,6 +114,14 @@ public class UserServiceImpl implements UserService {
         user.setName(request.getName());
         user.setRole(request.getRole());
         user.setEnabled(true);
+
+        // Set transport type ONLY for OPERATOR, null for all others
+        if (request.getRole() == RoleEnum.OPERATOR) {
+            user.setTransportType(request.getTransportType());
+        } else {
+            // Force null for non-OPERATOR roles
+            user.setTransportType(null);
+        }
 
         User savedUser = userRepository.save(user);
         logger.info("User created successfully: " + savedUser.getId());
@@ -131,6 +147,13 @@ public class UserServiceImpl implements UserService {
             throw new InvalidFileException("Name is required and cannot be empty");
         }
 
+        // Validate that OPERATOR must have transportType, others must have null
+        if (request.getRole() == RoleEnum.OPERATOR) {
+            if (request.getTransportType() == null) {
+                throw new InvalidFileException("TransportType is required for OPERATOR role");
+            }
+        }
+
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setName(request.getName());
@@ -144,6 +167,14 @@ public class UserServiceImpl implements UserService {
         // Update enabled if provided
         if (request.getEnabled() != null) {
             user.setEnabled(request.getEnabled());
+        }
+
+        // Set transport type ONLY for OPERATOR, null for all others
+        if (request.getRole() == RoleEnum.OPERATOR) {
+            user.setTransportType(request.getTransportType());
+        } else {
+            // Force null for non-OPERATOR roles
+            user.setTransportType(null);
         }
 
         User savedUser = userRepository.save(user);

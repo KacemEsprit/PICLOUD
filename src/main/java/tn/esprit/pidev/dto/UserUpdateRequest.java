@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import tn.esprit.pidev.entity.RoleEnum;
+import tn.esprit.pidev.entity.TransportType;
 
 public class UserUpdateRequest {
     @JsonProperty("username")
@@ -29,6 +30,9 @@ public class UserUpdateRequest {
 
     @JsonProperty("enabled")
     private Boolean enabled;  // Optional field
+
+    @JsonProperty("transportType")
+    private TransportType transportType;  // Required for OPERATOR, optional for others
 
     // Getters and Setters
     public String getUsername() {
@@ -77,5 +81,13 @@ public class UserUpdateRequest {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public TransportType getTransportType() {
+        return transportType;
+    }
+
+    public void setTransportType(TransportType transportType) {
+        this.transportType = transportType;
     }
 }
