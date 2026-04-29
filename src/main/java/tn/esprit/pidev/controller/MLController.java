@@ -2,28 +2,22 @@ package tn.esprit.pidev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import tn.esprit.pidev.dto.ActionSendResponse;
 import tn.esprit.pidev.dto.ChurnPredictionResponse;
+import tn.esprit.pidev.dto.CLVResponse;
 import tn.esprit.pidev.dto.PlanRecommendationResponse;
 import tn.esprit.pidev.service.IMLService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api/ml")
-@Tag(name = "IA & ML", description = "Recommandation de plan et prédiction de churn — algorithmes maison")
+@RequestMapping("/ml")
+@CrossOrigin(origins = "*", maxAge = 3600)
+@Tag(name = "AI & ML", description = "Plan recommendation, churn prediction, CLV and automated actions")
 public class MLController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MLController.class);
     private final IMLService service;
 
     public MLController(IMLService service) {
@@ -31,50 +25,33 @@ public class MLController {
     }
 
     @GetMapping("/recommend/{passengerId}")
-    @PreAuthorize("hasRole('PASSENGER') or hasRole('OPERATOR') or hasRole('ADMIN')")
-    @Operation(summary = "Recommander un plan pour un passager (scoring pondéré)")
-    public ResponseEntity<?> recommend(@PathVariable Long passengerId) {
-        try {
-            logger.info("Recommending plan for passenger: {}", passengerId);
-            return ResponseEntity.ok(service.recommendPlan(passengerId));
-        } catch (Exception e) {
-            logger.error("Error recommending plan: {}", e.getMessage());
-            return buildErrorResponse(500, "Error generating recommendation: " + e.getMessage());
-        }
+    @Operation(summary = "Recommend a plan for a passenger (Random Forest)")
+    public ResponseEntity<PlanRecommendationResponse> recommend(@PathVariable Long passengerId) {
+        return ResponseEntity.ok(service.recommendPlan(passengerId));
     }
 
     @GetMapping("/churn/{passengerId}")
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('ADMIN')")
-    @Operation(summary = "Prédire le risque de churn d'un passager (régression logistique)")
-    public ResponseEntity<?> churn(@PathVariable Long passengerId) {
-        try {
-            logger.info("Predicting churn for passenger: {}", passengerId);
-            return ResponseEntity.ok(service.predictChurn(passengerId));
-        } catch (Exception e) {
-            logger.error("Error predicting churn: {}", e.getMessage());
-            return buildErrorResponse(500, "Error predicting churn: " + e.getMessage());
-        }
+    @Operation(summary = "Predict churn risk for a passenger (Random Forest)")
+    public ResponseEntity<ChurnPredictionResponse> churn(@PathVariable Long passengerId) {
+        return ResponseEntity.ok(service.predictChurn(passengerId));
     }
 
     @GetMapping("/churn/all")
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('ADMIN')")
-    @Operation(summary = "Prédire le churn de tous les passagers — OPERATOR / ADMIN")
-    public ResponseEntity<?> churnAll() {
-        try {
-            logger.info("Predicting churn for all passengers");
-            return ResponseEntity.ok(service.predictChurnAll());
-        } catch (Exception e) {
-            logger.error("Error predicting churn for all: {}", e.getMessage());
-            return buildErrorResponse(500, "Error predicting churn: " + e.getMessage());
-        }
+    @Operation(summary = "Predict churn for all passengers — OPERATOR / ADMIN")
+    public ResponseEntity<List<ChurnPredictionResponse>> churnAll() {
+        return ResponseEntity.ok(service.predictChurnAll());
     }
 
-    private ResponseEntity<Map<String, Object>> buildErrorResponse(int status, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", status);
-        body.put("message", message);
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(status).body(body);
+    @GetMapping("/clv/{passengerId}")
+    @Operation(summary = "Predict Customer Lifetime Value (Gradient Boosting)")
+    public ResponseEntity<CLVResponse> clv(@PathVariable Long passengerId) {
+        return ResponseEntity.ok(service.predictCLV(passengerId));
+    }
+
+    // ── NEW : Send action — generates promo code + sends email ──
+    @PostMapping("/action/send/{passengerId}")
+    @Operation(summary = "Send recommended action to passenger — generates unique promo code and sends email")
+    public ResponseEntity<ActionSendResponse> sendAction(@PathVariable Long passengerId) {
+        return ResponseEntity.ok(service.sendAction(passengerId));
     }
 }
-

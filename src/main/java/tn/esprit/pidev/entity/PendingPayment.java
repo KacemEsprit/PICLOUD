@@ -29,6 +29,13 @@ public class PendingPayment {
     @Column(nullable = false)
     private PaymentStatus status;
 
+    /** Souhait de renouvellement automatique (propagé à l'abonnement créé). */
+    @Column(nullable = false)
+    private boolean autoRenewal = false;
+
+    /** Abonnement créé après paiement (idempotence webhook / success). */
+    private Long subscriptionId;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -53,4 +60,8 @@ public class PendingPayment {
     public PaymentStatus getStatus() { return status; }
     public void setStatus(PaymentStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public boolean isAutoRenewal() { return autoRenewal; }
+    public void setAutoRenewal(boolean autoRenewal) { this.autoRenewal = autoRenewal; }
+    public Long getSubscriptionId() { return subscriptionId; }
+    public void setSubscriptionId(Long subscriptionId) { this.subscriptionId = subscriptionId; }
 }

@@ -2,128 +2,119 @@ package tn.esprit.pidev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.pidev.dto.AutoRenewalUpdateRequest;
 import tn.esprit.pidev.dto.SubscriptionRequest;
 import tn.esprit.pidev.dto.SubscriptionResponse;
 import tn.esprit.pidev.entity.SubscriptionStatus;
+import tn.esprit.pidev.scheduler.AutoRenewalScheduler;
 import tn.esprit.pidev.service.ISubscriptionService;
 
-import java.util.HashMap;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/subscriptions")
-@Tag(name = "Subscription", description = "Gestion des abonnements — réservé aux PASSENGER")
+@RequestMapping("/subscriptions")
+@CrossOrigin(origins = "*", maxAge = 3600)
+@Tag(name = "Subscription", description = "Subscription management — PASSENGER only")
 public class SubscriptionController {
 
-    private static final Logger logger = LoggerFactory.getLogger(SubscriptionController.class);
-    private final ISubscriptionService service;
+    private final ISubscriptionService    service;
+    private final AutoRenewalScheduler    scheduler;
 
-    public SubscriptionController(ISubscriptionService service) {
-        this.service = service;
+    public SubscriptionController(ISubscriptionService service,
+                                  AutoRenewalScheduler scheduler) {
+        this.service   = service;
+        this.scheduler = scheduler;
     }
 
     @PostMapping("/passenger/{passengerId}")
-    @PreAuthorize("hasRole('PASSENGER')")
-    @Operation(summary = "Souscrire à un plan (PASSENGER) — génère des points loyalty automatiquement")
-    public ResponseEntity<?> subscribe(
+    @Operation(summary = "Subscribe to a plan (PASSENGER) — loyalty points generated automatically")
+    public ResponseEntity<SubscriptionResponse> subscribe(
             @RequestBody SubscriptionRequest request,
             @PathVariable Long passengerId) {
-        try {
-            return new ResponseEntity<>(service.subscribe(request, passengerId), HttpStatus.CREATED);
-        } catch (Exception e) {
-            logger.error("Error subscribing passenger {}: {}", passengerId, e.getMessage());
-            return buildErrorResponse(400, "Subscription error: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/operator/{operatorId}")
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('ADMIN')")
-    @Operation(summary = "Créer une subscription pour un opérateur (OPERATOR/ADMIN)")
-    public ResponseEntity<?> createForOperator(
-            @RequestBody SubscriptionRequest request,
-            @PathVariable Long operatorId) {
-        try {
-            logger.info("Creating subscription for operator: {}", operatorId);
-            return new ResponseEntity<>(service.subscribe(request, operatorId), HttpStatus.CREATED);
-        } catch (Exception e) {
-            logger.error("Error creating subscription for operator {}: {}", operatorId, e.getMessage());
-            return buildErrorResponse(400, "Subscription creation error: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/operator/{operatorId}")
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('ADMIN')")
-    @Operation(summary = "Récupérer les subscriptions d'un opérateur")
-    public ResponseEntity<List<SubscriptionResponse>> byOperator(@PathVariable Long operatorId) {
-        try {
-            return ResponseEntity.ok(service.getByPassenger(operatorId));
-        } catch (Exception e) {
-            logger.error("Error fetching subscriptions for operator {}: {}", operatorId, e.getMessage());
-            return ResponseEntity.status(404).build();
-        }
+        return new ResponseEntity<>(service.subscribe(request, passengerId), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Récupérer un abonnement par ID")
+    @Operation(summary = "Get a subscription by ID")
     public ResponseEntity<SubscriptionResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
-    @Operation(summary = "Tous les abonnements — ADMIN / OPERATOR")
+    @Operation(summary = "Get all subscriptions — ADMIN / OPERATOR")
     public ResponseEntity<List<SubscriptionResponse>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
+    @GetMapping("/operator/{operatorId}")
+    @Operation(summary = "Subscriptions linked to an operator's plans")
+    public ResponseEntity<List<SubscriptionResponse>> byOperator(@PathVariable Long operatorId) {
+        return ResponseEntity.ok(service.getByOperator(operatorId));
+    }
+
     @GetMapping("/passenger/{passengerId}")
-    @PreAuthorize("hasRole('PASSENGER') or hasRole('ADMIN') or hasRole('OPERATOR')")
-    @Operation(summary = "Abonnements d'un passager")
+    @Operation(summary = "Subscriptions of a passenger")
     public ResponseEntity<List<SubscriptionResponse>> byPassenger(@PathVariable Long passengerId) {
         return ResponseEntity.ok(service.getByPassenger(passengerId));
     }
 
     @GetMapping("/by-statut/{statut}")
-    @Operation(summary = "Filtrer par statut (ACTIVE / EXPIRED / CANCELLED)")
+    @Operation(summary = "Filter by status (ACTIVE / EXPIRED / CANCELLED)")
     public ResponseEntity<List<SubscriptionResponse>> byStatut(@PathVariable SubscriptionStatus statut) {
         return ResponseEntity.ok(service.getByStatut(statut));
     }
 
     @PutMapping("/{id}/cancel/passenger/{passengerId}")
-    @PreAuthorize("hasRole('PASSENGER')")
-    @Operation(summary = "Annuler un abonnement (PASSENGER)")
-    public ResponseEntity<?> cancel(
+    @Operation(summary = "Cancel a subscription (PASSENGER)")
+    public ResponseEntity<SubscriptionResponse> cancel(
             @PathVariable Long id,
             @PathVariable Long passengerId) {
-        try {
-            return ResponseEntity.ok(service.cancel(id, passengerId));
-        } catch (Exception e) {
-            logger.error("Error cancelling subscription {}: {}", id, e.getMessage());
-            return buildErrorResponse(400, "Cancellation error: " + e.getMessage());
+        return ResponseEntity.ok(service.cancel(id, passengerId));
+    }
+
+    @RequestMapping(
+            value = "/{id}/auto-renewal/passenger/{passengerId}",
+            method = {RequestMethod.PUT, RequestMethod.PATCH},
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Enable / disable auto-renewal (PASSENGER, active subscription only)")
+    public ResponseEntity<SubscriptionResponse> updateAutoRenewal(
+            @PathVariable Long id,
+            @PathVariable Long passengerId,
+            @RequestBody @Valid AutoRenewalUpdateRequest body) {
+        if (body.getAutoRenewal() == null) {
+            throw new RuntimeException("Field autoRenewal is required (true or false).");
         }
+        return ResponseEntity.ok(service.updateAutoRenewal(id, passengerId, body.getAutoRenewal()));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Supprimer un abonnement — ADMIN")
+    @Operation(summary = "Delete a subscription — ADMIN")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    private ResponseEntity<Map<String, Object>> buildErrorResponse(int status, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", status);
-        body.put("message", message);
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(status).body(body);
+    // ── TEST ENDPOINT — run the scheduler manually for a given date ──────────
+    // Usage: GET /PI/subscriptions/test-scheduler?date=2025-04-27
+    // This simulates "today is <date>" — useful to test without waiting for 8am cron.
+    // REMOVE this endpoint before going to production.
+    @GetMapping("/test-scheduler")
+    @Operation(summary = "DEV ONLY — trigger renewal scheduler for a given date")
+    public ResponseEntity<Map<String, String>> testScheduler(
+            @RequestParam(defaultValue = "") String date) {
+        LocalDate ref = date.isBlank() ? LocalDate.now() : LocalDate.parse(date);
+        scheduler.processRenewalsAndNotifications(ref);
+        return ResponseEntity.ok(Map.of(
+                "status", "executed",
+                "referenceDate", ref.toString(),
+                "message", "Scheduler ran for date " + ref + ". Check server logs and emails."
+        ));
     }
 }
-

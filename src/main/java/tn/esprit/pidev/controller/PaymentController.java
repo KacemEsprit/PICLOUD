@@ -2,105 +2,83 @@ package tn.esprit.pidev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import tn.esprit.pidev.entity.RoleEnum;
 import tn.esprit.pidev.dto.PaymentInitRequest;
+import tn.esprit.pidev.dto.PaymentInitMeRequest;
 import tn.esprit.pidev.dto.PaymentInitResponse;
 import tn.esprit.pidev.dto.SubscriptionResponse;
+import tn.esprit.pidev.entity.User;
 import tn.esprit.pidev.repository.UserRepository;
 import tn.esprit.pidev.service.IStripePaymentService;
 
-import java.util.HashMap;
+import jakarta.validation.Valid;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/payment")
+@RequestMapping("/payment")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @Tag(name = "Paiement Stripe",
         description = "Initiation et confirmation des paiements via Stripe")
 public class PaymentController {
 
-    private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
     private final IStripePaymentService paymentService;
-    private final UserRepository userRepository;
+    private final UserRepository userRepo;
 
-    public PaymentController(IStripePaymentService paymentService, UserRepository userRepository) {
+    public PaymentController(IStripePaymentService paymentService, UserRepository userRepo) {
         this.paymentService = paymentService;
-        this.userRepository = userRepository;
+        this.userRepo = userRepo;
     }
 
     @PostMapping("/initiate")
-    @PreAuthorize("hasRole('PASSENGER')")
     @Operation(summary = "Initier un paiement Stripe — retourne l'URL checkout")
-    public ResponseEntity<?> initiate(
-            @RequestBody PaymentInitRequest request) {
-        try {
-            return ResponseEntity.ok(paymentService.initiatePayment(request));
-        } catch (Exception e) {
-            logger.error("Error initiating payment: {}", e.getMessage());
-            return buildErrorResponse(500, "Error initiating payment: " + e.getMessage());
-        }
+    public ResponseEntity<PaymentInitResponse> initiate(
+            @Valid @RequestBody PaymentInitRequest request) {
+        return ResponseEntity.ok(paymentService.initiatePayment(request));
     }
 
     @PostMapping("/initiate/me")
-    @PreAuthorize("hasRole('PASSENGER')")
-    @Operation(summary = "Initier un paiement pour l'utilisateur actuel — retourne l'URL checkout")
-    public ResponseEntity<?> initiatMe(
-            @RequestBody PaymentInitRequest request) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth.getName(); // Get username from authentication
-            logger.info("Initiating payment for user: {}", username);
-
-            // Lookup user by username to get the ID
-            Long userId = userRepository.findByUsername(username)
-                    .map(user -> user.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found: " + username));
-
-            logger.info("Found user ID for username '{}': {}", username, userId);
-
-            // Set the passenger ID from user lookup
-            request.setPassengerId(userId);
-            return ResponseEntity.ok(paymentService.initiatePayment(request));
-        } catch (Exception e) {
-            logger.error("Error initiating payment for current user: {}", e.getMessage());
-            return buildErrorResponse(500, "Error initiating payment: " + e.getMessage());
+    @Operation(summary = "Initier un paiement Stripe pour l'utilisateur courant (PASSENGER)")
+    public ResponseEntity<PaymentInitResponse> initiateMe(@Valid @RequestBody PaymentInitMeRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            throw new RuntimeException("Utilisateur non authentifié.");
         }
+        String username = auth.getName();
+
+        User passenger = userRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable : " + username));
+        if (passenger.getRole() != RoleEnum.PASSENGER) {
+            throw new RuntimeException("Accès refusé : seuls les PASSENGER peuvent initier un paiement.");
+        }
+
+        PaymentInitRequest req = new PaymentInitRequest();
+        req.setPassengerId(passenger.getId());
+        req.setPricingPlanId(request.getPricingPlanId());
+        req.setCodeReduction(request.getCodeReduction());
+        req.setAutoRenewal(request.getAutoRenewal());
+        req.setPaymentMode(request.getPaymentMode());
+        req.setPointsToUse(request.getPointsToUse());
+
+        return ResponseEntity.ok(paymentService.initiatePayment(req));
     }
 
     @GetMapping("/success")
-    @Operation(summary = "Callback Stripe après paiement réussi — active la subscription")
-    public ResponseEntity<?> success(
+    @Operation(summary = "Callback Stripe après paiement réussi — abonnement actif")
+    public ResponseEntity<SubscriptionResponse> success(
             @RequestParam String session_id) {
-        try {
-            return ResponseEntity.ok(paymentService.confirmPayment(session_id));
-        } catch (Exception e) {
-            logger.error("Error confirming payment: {}", e.getMessage());
-            return buildErrorResponse(500, "Error confirming payment: " + e.getMessage());
-        }
+        return ResponseEntity.ok(paymentService.confirmPayment(session_id));
     }
 
     @GetMapping("/cancel")
-    @Operation(summary = "Callback Stripe après annulation")
+    @Operation(summary = "Stripe callback after cancellation")
     public ResponseEntity<Map<String, String>> cancel() {
         return ResponseEntity.ok(Map.of(
                 "status", "CANCELLED",
-                "message", "Paiement annulé par l'utilisateur."
+                "message", "Payment canceled by user."
         ));
     }
-
-    private ResponseEntity<Map<String, Object>> buildErrorResponse(int status, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", status);
-        body.put("message", message);
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(status).body(body);
-    }
 }
-
-
-

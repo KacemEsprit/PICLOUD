@@ -24,12 +24,17 @@ public class PricingPlan {
     @Column(nullable = false)
     private Double prix;
 
-    @Column(nullable = false)
-    private Integer dureeEnMois;
+    // Compat DB: on conserve la colonne existante duree_en_mois, mais la valeur représente désormais des jours.
+    @Column(name = "duree_en_mois", nullable = false)
+    private Integer dureeEnJours;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PricingType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transport_type")
+    private TransportType transportType;
 
     // Lien avec User (Operator qui a créé ce plan)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -44,11 +49,11 @@ public class PricingPlan {
     // Constructors
     public PricingPlan() {}
 
-    public PricingPlan(String nom, String description, Double prix, Integer dureeEnMois, PricingType type) {
+    public PricingPlan(String nom, String description, Double prix, Integer dureeEnJours, PricingType type) {
         this.nom = nom;
         this.description = description;
         this.prix = prix;
-        this.dureeEnMois = dureeEnMois;
+        this.dureeEnJours = dureeEnJours;
         this.type = type;
     }
 
@@ -60,12 +65,14 @@ public class PricingPlan {
     public void setDescription(String description) { this.description = description; }
     public Double getPrix() { return prix; }
     public void setPrix(Double prix) { this.prix = prix; }
-    public Integer getDureeEnMois() { return dureeEnMois; }
-    public void setDureeEnMois(Integer dureeEnMois) { this.dureeEnMois = dureeEnMois; }
+    public Integer getDureeEnJours() { return dureeEnJours; }
+    public void setDureeEnJours(Integer dureeEnJours) { this.dureeEnJours = dureeEnJours; }
     public PricingType getType() { return type; }
     public void setType(PricingType type) { this.type = type; }
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
     public List<Subscription> getSubscriptions() { return subscriptions; }
     public void setSubscriptions(List<Subscription> subscriptions) { this.subscriptions = subscriptions; }
+    public TransportType getTransportType() { return transportType; }
+    public void setTransportType(TransportType transportType) { this.transportType = transportType; }
 }

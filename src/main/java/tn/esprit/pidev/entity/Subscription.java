@@ -34,6 +34,20 @@ public class Subscription {
     @JoinColumn(name = "pricing_plan_id", nullable = false)
     private PricingPlan pricingPlan;
 
+    /** Renouvellement souhaité (rappels + lien de paiement avant échéance ; extension manuelle / futur prélèvement). */
+    @Column(name = "auto_renewal", nullable = false)
+    private boolean autoRenewal = false;
+
+    /** Client Stripe (Checkout avec customer_creation) pour renouvellements futurs. */
+    @Column(name = "stripe_customer_id", length = 64)
+    private String stripeCustomerId;
+
+    @Column(name = "reminder_email_7d_sent", nullable = false)
+    private boolean reminderEmail7dSent = false;
+
+    @Column(name = "reminder_email_1d_sent", nullable = false)
+    private boolean reminderEmail1dSent = false;
+
     // Constructors
     public Subscription() {}
 
@@ -58,4 +72,13 @@ public class Subscription {
     public void setPassenger(User passenger) { this.passenger = passenger; }
     public PricingPlan getPricingPlan() { return pricingPlan; }
     public void setPricingPlan(PricingPlan pricingPlan) { this.pricingPlan = pricingPlan; }
+
+    public boolean isAutoRenewal() { return autoRenewal; }
+    public void setAutoRenewal(boolean autoRenewal) { this.autoRenewal = autoRenewal; }
+    public String getStripeCustomerId() { return stripeCustomerId; }
+    public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
+    public boolean isReminderEmail7dSent() { return reminderEmail7dSent; }
+    public void setReminderEmail7dSent(boolean reminderEmail7dSent) { this.reminderEmail7dSent = reminderEmail7dSent; }
+    public boolean isReminderEmail1dSent() { return reminderEmail1dSent; }
+    public void setReminderEmail1dSent(boolean reminderEmail1dSent) { this.reminderEmail1dSent = reminderEmail1dSent; }
 }

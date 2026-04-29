@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import tn.esprit.pidev.entity.RoleEnum;
+import tn.esprit.pidev.entity.TransportType;
 
 public class UserCreateRequest {
     @JsonProperty("username")
@@ -34,6 +35,9 @@ public class UserCreateRequest {
 
     @JsonProperty("cin")
     private Long cin;  // Optional field
+
+    @JsonProperty("transportType")
+    private TransportType transportType;  // Required for OPERATOR, optional for others
 
     // Getters and Setters
     public String getUsername() {
@@ -82,5 +86,13 @@ public class UserCreateRequest {
 
     public void setCin(Long cin) {
         this.cin = cin;
+    }
+
+    public TransportType getTransportType() {
+        return transportType;
+    }
+
+    public void setTransportType(TransportType transportType) {
+        this.transportType = transportType;
     }
 }

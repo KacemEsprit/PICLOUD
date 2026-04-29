@@ -1,11 +1,6 @@
 package tn.esprit.pidev.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.pidev.dto.PricingPlanRequest;
 import tn.esprit.pidev.dto.PricingPlanResponse;
 import tn.esprit.pidev.entity.PricingPlan;
@@ -21,8 +16,6 @@ import java.util.stream.Collectors;
 @Service
 public class PricingPlanServiceImpl implements IPricingPlanService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PricingPlanServiceImpl.class);
-
     private final PricingPlanRepository planRepo;
     private final UserRepository userRepo;
 
@@ -33,26 +26,48 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
 
     @Override
     public PricingPlanResponse create(PricingPlanRequest request, Long operatorId) {
-        validateOperatorRole(operatorId);
-        User operator = getOperatorUser(operatorId);
+        User operator = getOperator(operatorId);
+
+        String trimmedName = request.getNom() == null ? "" : request.getNom().trim();
+        if (trimmedName.isEmpty()) {
+            throw new RuntimeException("Plan name is required.");
+        }
+        boolean nameExists = planRepo.findAll().stream()
+                .anyMatch(p -> p.getNom().trim().equalsIgnoreCase(trimmedName));
+        if (nameExists) {
+            throw new RuntimeException("A pricing plan with the name \"" + trimmedName + "\" already exists.");
+        }
+
+        Integer dureeEnJours = request.getDureeEnJours();
+        if (dureeEnJours == null || dureeEnJours <= 0) {
+            throw new RuntimeException("Plan duration (in days) is required and must be greater than 0.");
+        }
+        if (request.getPrix() == null || request.getPrix() < 0) {
+            throw new RuntimeException("Plan price is required and must be >= 0.");
+        }
+        if (request.getType() == null) {
+            throw new RuntimeException("Plan type is required (FREE, BASIC or PREMIUM).");
+        }
+
         PricingPlan plan = new PricingPlan();
-        plan.setNom(request.getNom());
+        plan.setNom(trimmedName);
         plan.setDescription(request.getDescription());
         plan.setPrix(request.getPrix());
-        plan.setDureeEnMois(request.getDureeEnMois());
+        plan.setDureeEnJours(dureeEnJours);
         plan.setType(request.getType());
         plan.setCreatedBy(operator);
+        // ── FIX : inherit transportType from the operator ──
+        plan.setTransportType(operator.getTransportType());
+
         return PricingPlanResponse.fromEntity(planRepo.save(plan));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PricingPlanResponse getById(Long id) {
         return PricingPlanResponse.fromEntity(findById(id));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getAll() {
         return planRepo.findAll().stream()
                 .map(PricingPlanResponse::fromEntity)
@@ -61,25 +76,49 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
 
     @Override
     public PricingPlanResponse update(Long id, PricingPlanRequest request, Long operatorId) {
-        validateOperatorRole(operatorId);
+        // ── FIX : keep operator reference to set transportType ──
+        User operator = getOperator(operatorId);
+
+        String trimmedName = request.getNom() == null ? "" : request.getNom().trim();
+        if (trimmedName.isEmpty()) {
+            throw new RuntimeException("Plan name is required.");
+        }
+
+        boolean nameExists = planRepo.findAll().stream()
+                .anyMatch(p -> !p.getId().equals(id)
+                        && p.getNom().trim().equalsIgnoreCase(trimmedName));
+        if (nameExists) {
+            throw new RuntimeException("A pricing plan with the name \"" + trimmedName + "\" already exists.");
+        }
+
+        Integer dureeEnJours = request.getDureeEnJours();
+        if (dureeEnJours == null || dureeEnJours <= 0) {
+            throw new RuntimeException("Plan duration (in days) is required and must be greater than 0.");
+        }
+        if (request.getPrix() == null || request.getPrix() < 0) {
+            throw new RuntimeException("Plan price is required and must be >= 0.");
+        }
+
         PricingPlan plan = findById(id);
-        plan.setNom(request.getNom());
+        plan.setNom(trimmedName);
         plan.setDescription(request.getDescription());
         plan.setPrix(request.getPrix());
-        plan.setDureeEnMois(request.getDureeEnMois());
+        plan.setDureeEnJours(dureeEnJours);
         plan.setType(request.getType());
+        // ── FIX : inherit transportType from the operator ──
+        plan.setTransportType(operator.getTransportType());
+
         return PricingPlanResponse.fromEntity(planRepo.save(plan));
     }
 
     @Override
     public void delete(Long id, Long operatorId) {
-        validateOperatorRole(operatorId);
+        getOperator(operatorId);
         findById(id);
         planRepo.deleteById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getByType(PricingType type) {
         return planRepo.findByType(type).stream()
                 .map(PricingPlanResponse::fromEntity)
@@ -87,7 +126,6 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getByMaxPrice(Double maxPrix) {
         return planRepo.findByPrixLessThanEqual(maxPrix).stream()
                 .map(PricingPlanResponse::fromEntity)
@@ -95,57 +133,25 @@ public class PricingPlanServiceImpl implements IPricingPlanService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<PricingPlanResponse> getByOperator(Long operatorId) {
-        logger.info("Fetching pricing plans for operator: {}", operatorId);
-        List<PricingPlanResponse> plans = planRepo.findByCreatedById(operatorId).stream()
+        return planRepo.findByCreatedById(operatorId).stream()
                 .map(PricingPlanResponse::fromEntity)
                 .collect(Collectors.toList());
-        logger.info("Found {} pricing plans for operator {}", plans.size(), operatorId);
-        return plans;
     }
 
-    // ===== Helpers =====
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private PricingPlan findById(Long id) {
         return planRepo.findById(id)
-                .orElseThrow(() -> {
-                    logger.warn("PricingPlan not found: {}", id);
-                    return new RuntimeException("PricingPlan introuvable : " + id);
-                });
+                .orElseThrow(() -> new RuntimeException("Pricing plan not found: " + id));
     }
 
-    /**
-     * Validates that the user calling this operation has OPERATOR or ADMIN role.
-     * Returns the operator user if valid, otherwise throws an exception.
-     */
-    private void validateOperatorRole(Long operatorId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth != null ? auth.getName() : "UNKNOWN";
-
-        logger.debug("Validating operator role for user: {} on operatorId: {}", username, operatorId);
-
+    private User getOperator(Long operatorId) {
         User user = userRepo.findById(operatorId)
-                .orElseThrow(() -> {
-                    logger.error("User not found: {} (attempt by: {})", operatorId, username);
-                    return new RuntimeException("Utilisateur introuvable : " + operatorId);
-                });
-
+                .orElseThrow(() -> new RuntimeException("User not found: " + operatorId));
         if (user.getRole() != RoleEnum.OPERATOR && user.getRole() != RoleEnum.ADMIN) {
-            logger.error("Access denied: User {} tried to manage plans for user {}, but {} has role {}",
-                    username, operatorId, user.getUsername(), user.getRole());
-            throw new RuntimeException("Accès refusé : seuls les OPERATOR et ADMIN peuvent gérer les plans (user has role: " + user.getRole() + ")");
+            throw new RuntimeException("Access denied: only OPERATOR and ADMIN can manage pricing plans.");
         }
-
-        logger.info("Operator role validation passed for user: {} with operatorId: {}", username, operatorId);
-    }
-
-    private User getOperatorUser(Long operatorId) {
-        return userRepo.findById(operatorId)
-                .orElseThrow(() -> {
-                    logger.error("Operator user not found: {}", operatorId);
-                    return new RuntimeException("Utilisateur introuvable : " + operatorId);
-                });
+        return user;
     }
 }
-

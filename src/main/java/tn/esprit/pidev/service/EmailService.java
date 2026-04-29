@@ -1,6 +1,9 @@
 package tn.esprit.pidev.service;
 
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,16 +13,21 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.MessagingException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 
 /**
  * Service for sending emails (password reset, notifications, etc.)
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
-
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final JavaMailSender mailSender;
     @Autowired(required = false)
     private JavaMailSender javaMailSender;
 
@@ -200,6 +208,76 @@ public class EmailService {
             logger.error("Failed to send password reset email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send password reset email", e);
         }
+    }
+
+    public void sendRenewalReminderEmail(String toEmail, String passengerName,
+                                         String planName, LocalDate dateFin,
+                                         int daysLeft, boolean autoRenewEnabled) {
+        String subject = "TransitTN — Your subscription expires in " + daysLeft + " day(s)";
+        String renewalMsg = autoRenewEnabled
+                ? "<div style='background:#e8f5e9;border-radius:8px;padding:12px;margin:16px 0;color:#2e7d32'>"
+                  + "<strong>✓ Auto-renewal is enabled.</strong> Your subscription will be renewed automatically.</div>"
+                : "<div style='background:#fff8e1;border-radius:8px;padding:12px;margin:16px 0;color:#f57f17'>"
+                  + "<strong>⚠ Auto-renewal is disabled.</strong> "
+                  + "<a href='" + frontendUrl + "/passenger/subscriptions'>Enable it here</a> to avoid interruption.</div>";
+
+        String body = baseLayout(
+                "Subscription expiring soon",
+                passengerName,
+                "<p>Your subscription to the <strong>" + planName + "</strong> plan expires on "
+                        + "<strong>" + dateFin.format(FMT) + "</strong> (in <strong>" + daysLeft + " day(s)</strong>).</p>"
+                        + renewalMsg
+                        + "<a href='" + frontendUrl + "/passenger/subscriptions' class='btn'>View my subscriptions</a>"
+        );
+        send(toEmail, subject, body);
+    }
+    private void send(String to, String subject, String htmlBody) {
+        try {
+            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+            mailSender.send(msg);
+            log.info("Email sent to {} — {}", to, subject);
+        } catch (MessagingException e) {
+            log.error("Failed to send email to {}: {}", to, e.getMessage());
+        }
+    }
+    public void sendRenewalConfirmationEmail(String toEmail, String passengerName,
+                                             String planName, LocalDate newDateFin) {
+        String subject = "TransitTN — Your subscription has been renewed";
+        String body = baseLayout(
+                "Subscription renewed",
+                passengerName,
+                "<p>Your subscription to the <strong>" + planName + "</strong> plan has been successfully renewed.</p>"
+                        + "<p>New expiry date: <strong>" + newDateFin.format(FMT) + "</strong>.</p>"
+                        + "<a href='" + frontendUrl + "/passenger/subscriptions' class='btn'>View my subscriptions</a>"
+        );
+        send(toEmail, subject, body);
+    }
+
+
+    // ── HTML layout ───────────────────────────────────────────────────────────
+    private String baseLayout(String title, String name, String content) {
+        return """
+            <div style="font-family:sans-serif;max-width:540px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e0e0e0">
+              <div style="background:#1a237e;padding:20px 28px;display:flex;align-items:center;gap:12px">
+                <span style="font-size:22px">🚌</span>
+                <span style="color:#fff;font-size:1.2rem;font-weight:700">TransitTN</span>
+              </div>
+              <div style="padding:28px">
+                <h2 style="color:#1a237e;margin-bottom:8px">%s</h2>
+                <p>Hello <strong>%s</strong>,</p>
+                %s
+              </div>
+              <div style="background:#f5f5f5;padding:14px 28px;font-size:0.78rem;color:#999;text-align:center">
+                TransitTN — Please do not reply to this email.
+              </div>
+            </div>
+            <style>.btn{display:inline-block;margin-top:16px;padding:10px 20px;background:#1a237e;color:#fff;border-radius:8px;text-decoration:none;font-weight:600}</style>
+            """.formatted(title, name, content);
     }
 
     /**
